@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Message
 import android.support.v4.app.ActivityCompat
-import android.support.v7.app.AppCompatActivity
 import android.text.format.Formatter
 import android.util.DisplayMetrics
 import android.util.Log
@@ -20,14 +19,15 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.ImageView
-import kotlinx.android.synthetic.main.activity_main.*
+import com.angcyo.uiview.less.base.BaseAppCompatActivity
+import com.angcyo.uiview.less.manager.Screenshot
 import java.io.DataInputStream
 import java.io.File
 import java.io.FileInputStream
 import kotlin.experimental.and
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : BaseAppCompatActivity() {
 
     companion object {
         val Tag = "angcyo"
@@ -55,9 +55,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        setSupportActionBar(viewHolder.v(R.id.toolbar))
 
-        fab.setOnClickListener { view ->
+        viewHolder.view(R.id.fab).setOnClickListener { view ->
             //            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
 //                .setAction("Action", null).show()
 
