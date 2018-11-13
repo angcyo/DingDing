@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.PixelFormat
 import android.media.ImageReader
 import android.media.projection.MediaProjectionManager
@@ -20,6 +21,9 @@ import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.ImageView
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
+import com.angcyo.uiview.less.kotlin.toBase64
+import com.angcyo.uiview.less.kotlin.toBitmap
+import com.angcyo.uiview.less.kotlin.toBytes
 import com.angcyo.uiview.less.manager.Screenshot
 import java.io.DataInputStream
 import java.io.File
@@ -31,9 +35,6 @@ class MainActivity : BaseAppCompatActivity() {
 
     companion object {
         val Tag = "angcyo"
-        //14780977
-        //vGcIcmO6OWnPcBBv9TzZryiD
-        //Aa8lePlFQ8cp1py9GZUrrdkZGEyY2Tln
     }
 
     private var metrics: DisplayMetrics? = null
@@ -96,9 +97,15 @@ class MainActivity : BaseAppCompatActivity() {
                 )}"
             )
             findViewById<ImageView>(R.id.image_view).setImageBitmap(bitmap)
-        }.setAlwaysCapture(true).setCaptureDelay(1_000)
-    }
 
+            findViewById<ImageView>(R.id.image_view2).setImageBitmap(bitmap.toBytes()?.toBitmap())
+
+//            OCR.general(bitmap.toBase64())
+            OCR.general_basic(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
+            OCR.general(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
+            OCR.accurate(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
+        }.setAlwaysCapture(false).setCaptureDelay(1_000)
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
