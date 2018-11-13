@@ -11,6 +11,12 @@ import com.angcyo.uiview.less.accessibility.BaseAccessibilityService
 class DingDingAccessibility : BaseAccessibilityService() {
     override fun onServiceConnected() {
         super.onServiceConnected()
-        addInterceptor(DingDingInterceptor())
+        addInterceptor(DingDingInterceptor(this))
+        addInterceptor(SystemUIInterceptor())
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        DingDingInterceptor.screenshot?.destroy()
     }
 }

@@ -43,9 +43,9 @@ object OCR {
 
     @Synchronized
     fun general_basic(image: String) {
-//        if (isIng) {
-//            return
-//        }
+        if (isIng) {
+            return
+        }
         getToken {
             isIng = true
             Http.create(Api::class.java)
@@ -65,9 +65,9 @@ object OCR {
 
     @Synchronized
     fun general(image: String) {
-//        if (isIng) {
-//            return
-//        }
+        if (isIng) {
+            return
+        }
         getToken {
             isIng = true
             Http.create(Api::class.java)
@@ -87,9 +87,9 @@ object OCR {
 
     @Synchronized
     fun accurate(image: String) {
-//        if (isIng) {
-//            return
-//        }
+        if (isIng) {
+            return
+        }
         getToken {
             isIng = true
             Http.create(Api::class.java)

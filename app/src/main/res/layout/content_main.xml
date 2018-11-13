@@ -32,4 +32,6 @@
                app:layout_constraintTop_toBottomOf="@id/image_view"
                android:id="@+id/image_view2"/>
 
+    <!--<EditText android:layout_width="match_parent" android:layout_height="wrap_content"/>-->
+
 </android.support.constraint.ConstraintLayout>
