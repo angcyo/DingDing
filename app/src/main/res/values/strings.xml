@@ -1,4 +1,7 @@
 <resources>
-    <string name="app_name">DingDing</string>
+    <string name="app_name">钉钉打卡助手</string>
     <string name="action_settings">Settings</string>
+
+    <string name="base_accessibility_description">钉钉打卡助手(OCR版) \n支持Android 7.0</string>
+    <string name="base_accessibility_summary">钉钉打卡助手(OCR版)</string>
 </resources>
