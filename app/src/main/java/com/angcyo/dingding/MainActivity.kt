@@ -93,6 +93,8 @@ class MainActivity : BaseAppCompatActivity() {
                 if (Permission.check(this)) {
                     DingDingService.resetTime()
                     screenshot?.startCapture(this, 909)
+                } else {
+                    return@click
                 }
             }
 

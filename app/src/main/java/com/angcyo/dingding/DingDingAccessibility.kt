@@ -1,5 +1,6 @@
 package com.angcyo.dingding
 
+import android.content.Intent
 import com.angcyo.uiview.less.accessibility.BaseAccessibilityService
 
 /**
@@ -13,8 +14,11 @@ class DingDingAccessibility : BaseAccessibilityService() {
         super.onServiceConnected()
         addInterceptor(DingDingInterceptor(this))
         addInterceptor(SystemUIInterceptor())
+        addInterceptor(SecurityUIInterceptor())
 
         Tip.show("助手已准备")
+
+        startActivity(Intent(this, MainActivity::class.java))
     }
 
     override fun onDestroy() {

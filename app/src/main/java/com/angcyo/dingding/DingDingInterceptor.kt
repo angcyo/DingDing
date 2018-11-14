@@ -273,6 +273,14 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             wordBean.getRectByWord("我知道了").let {
                                 if (!it.isEmpty) {
                                     accService.touch(it.toPath())
+
+                                    //结束任务, 等待下一轮
+                                    handEvent = false
+
+                                    accService.back()
+                                    accService.back()
+                                    accService.back()
+                                    accService.back()
                                 }
                             }
                         }
