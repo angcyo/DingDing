@@ -1,6 +1,7 @@
 package com.angcyo.dingding
 
 import com.angcyo.dingding.bean.TokenBean
+import com.angcyo.dingding.bean.WordBean
 import com.angcyo.http.Http
 import com.angcyo.http.HttpSubscriber
 import com.angcyo.uiview.less.utils.T_
@@ -42,7 +43,7 @@ object OCR {
     }
 
     @Synchronized
-    fun general_basic(image: String) {
+    fun general_basic(image: String, end: ((WordBean?) -> Unit)? = null) {
         if (isIng) {
             return
         }
@@ -50,21 +51,22 @@ object OCR {
             isIng = true
             Http.create(Api::class.java)
                 .general_basic(it.access_token, image)
-                .compose(Http.transformerBean(String::class.java))
-                .subscribe(object : HttpSubscriber<String>() {
-                    override fun onEnd(data: String?, error: Throwable?) {
+                .compose(Http.transformerBean(WordBean::class.java))
+                .subscribe(object : HttpSubscriber<WordBean>() {
+                    override fun onEnd(data: WordBean?, error: Throwable?) {
                         super.onEnd(data, error)
                         isIng = false
                         error?.let {
                             T_.error(it.message)
                         }
+                        end?.invoke(data)
                     }
                 })
         }
     }
 
     @Synchronized
-    fun general(image: String) {
+    fun general(image: String, end: ((WordBean?) -> Unit)? = null) {
         if (isIng) {
             return
         }
@@ -72,21 +74,22 @@ object OCR {
             isIng = true
             Http.create(Api::class.java)
                 .general(it.access_token, image)
-                .compose(Http.transformerBean(String::class.java))
-                .subscribe(object : HttpSubscriber<String>() {
-                    override fun onEnd(data: String?, error: Throwable?) {
+                .compose(Http.transformerBean(WordBean::class.java))
+                .subscribe(object : HttpSubscriber<WordBean>() {
+                    override fun onEnd(data: WordBean?, error: Throwable?) {
                         super.onEnd(data, error)
                         isIng = false
                         error?.let {
                             T_.error(it.message)
                         }
+                        end?.invoke(data)
                     }
                 })
         }
     }
 
     @Synchronized
-    fun accurate(image: String) {
+    fun accurate(image: String, end: ((WordBean?) -> Unit)? = null) {
         if (isIng) {
             return
         }
@@ -94,14 +97,15 @@ object OCR {
             isIng = true
             Http.create(Api::class.java)
                 .accurate(it.access_token, image)
-                .compose(Http.transformerBean(String::class.java))
-                .subscribe(object : HttpSubscriber<String>() {
-                    override fun onEnd(data: String?, error: Throwable?) {
+                .compose(Http.transformerBean(WordBean::class.java))
+                .subscribe(object : HttpSubscriber<WordBean>() {
+                    override fun onEnd(data: WordBean?, error: Throwable?) {
                         super.onEnd(data, error)
                         isIng = false
                         error?.let {
                             T_.error(it.message)
                         }
+                        end?.invoke(data)
                     }
                 })
         }

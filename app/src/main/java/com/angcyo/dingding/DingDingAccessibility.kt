@@ -13,6 +13,8 @@ class DingDingAccessibility : BaseAccessibilityService() {
         super.onServiceConnected()
         addInterceptor(DingDingInterceptor(this))
         addInterceptor(SystemUIInterceptor())
+
+        Tip.show("助手已准备")
     }
 
     override fun onDestroy() {

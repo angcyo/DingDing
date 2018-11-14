@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.READ_FRAME_BUFFER"/>
 
     <application
-            android:name="com.angcyo.uiview.less.RApplication"
+            android:name=".App"
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
@@ -17,6 +17,7 @@
                 android:windowSoftInputMode="adjustResize"
                 android:name=".MainActivity"
                 android:label="@string/app_name"
+                android:launchMode="singleTask"
                 android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
@@ -37,6 +38,8 @@
                     android:name="android.accessibilityservice"
                     android:resource="@xml/base_accessibility_less_service"/>
         </service>
+
+        <service android:name=".DingDingService"/>
     </application>
 
 </manifest>

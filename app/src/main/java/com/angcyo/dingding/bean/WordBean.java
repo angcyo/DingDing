@@ -1,5 +1,9 @@
 package com.angcyo.dingding.bean;
 
+import android.graphics.Rect;
+import android.text.TextUtils;
+
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,11 +41,45 @@ public class WordBean {
     }
 
     public List<WordsResultBean> getWords_result() {
+        if (words_result == null) {
+            return Collections.emptyList();
+        }
         return words_result;
     }
 
     public void setWords_result(List<WordsResultBean> words_result) {
         this.words_result = words_result;
+    }
+
+    /**
+     * 返回指定关键字, 在图片中的矩形坐标
+     */
+    public Rect getRectByWord(String word) {
+        Rect rect = new Rect();
+
+        boolean isHaveFull = false;
+        //完整匹配
+        for (WordsResultBean bean : getWords_result()) {
+            if (TextUtils.equals(bean.words, word)) {
+                isHaveFull = true;
+                rect.set(bean.location.left, bean.location.top,
+                        bean.location.left + bean.location.width,
+                        bean.location.top + bean.location.height);
+                break;
+            }
+        }
+
+        if (!isHaveFull) {
+            for (WordsResultBean bean : getWords_result()) {
+                if (bean.words.contains(word)) {
+                    rect.set(bean.location.left, bean.location.top,
+                            bean.location.left + bean.location.width,
+                            bean.location.top + bean.location.height);
+                    break;
+                }
+            }
+        }
+        return rect;
     }
 
     public static class WordsResultBean {
@@ -51,7 +89,7 @@ public class WordBean {
          */
 
         private LocationBean location;
-        private String words;
+        private String words = "";
 
         public LocationBean getLocation() {
             return location;

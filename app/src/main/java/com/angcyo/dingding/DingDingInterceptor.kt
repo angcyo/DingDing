@@ -1,14 +1,16 @@
 package com.angcyo.dingding
 
+import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.Path
 import android.view.accessibility.AccessibilityEvent
+import com.angcyo.dingding.bean.WordBean
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.accessibility.*
 import com.angcyo.uiview.less.kotlin.toBase64
 import com.angcyo.uiview.less.manager.Screenshot
+import com.orhanobut.hawk.Hawk
 
 /**
  *
@@ -22,41 +24,66 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         @SuppressLint("StaticFieldLeak")
         var screenshot: Screenshot? = null
 
-        var lastBitmap: Bitmap? = null
+        var lastWordBean: WordBean? = null
+
+        const val DING_DING = "com.alibaba.android.rimet"
+
+        var onSearchWordEnd: ((WordBean?) -> Unit)? = null
+
+        /*钉钉网络请求延迟操作时间*/
+        const val HTTP_DELAY = 2_000L
+
+        /*是否需要处理无障碍事件*/
+        var handEvent = false
     }
 
-    /**是否需要处理截屏数据*/
-    var handlerEvent = false
+    var filterEven = FilterEven(
+        AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, "android.widget.FrameLayout", 2000
+    )
 
     init {
-        filterPackageName = "com.alibaba.android.rimet"
+        filterPackageName = DING_DING
 
         screenshot = Screenshot.capture(context) { bitmap, _ ->
             //            OCR.general(bitmap.toBase64())
 //            OCR.general_basic(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
 //            OCR.general(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
 //            OCR.accurate(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
-            if (handlerEvent) {
-                OCR.general(bitmap.toBase64())
-            } else {
-                lastBitmap = bitmap
+            OCR.general(bitmap.toBase64()) {
+                lastWordBean = it
+                onSearchWordEnd?.invoke(it)
             }
-        }.setAlwaysCapture(true).setCaptureDelay(1_000)
+        }.setAlwaysCapture(true).setAutoCapture(false).setCaptureDelay(3_00)
     }
 
-    override fun onAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
-        super.onAccessibilityEvent(accService, event)
-        //L.i("切换到")
+    override fun onDestroy() {
+        super.onDestroy()
+        screenshot?.destroy()
+        screenshot = null
+    }
+
+    override fun onFilterAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
+        if (!handEvent) {
+            return
+        }
+
         if (isWindowStateChanged(event)) {
+            if (isMainActivity(accService, event)) {
+                filterEventList.add(filterEven)
+            } else {
+                filterEventList.remove(filterEven)
+            }
+
             if (isLoginActivity(event)) {
                 L.i("钉钉登录界面")
+                Tip.show("即将为您登录")
 
                 findNodeById("et_phone_input", accService, event).let {
                     L.i("手机输入:${it.size}")
                     if (it.isEmpty()) {
 
                     } else {
-                        it.first().setNodeText("18575683884")
+                        it.first().setNodeText(Hawk.get("ding_user", ""))
                     }
                 }
 
@@ -65,7 +92,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     if (it.isEmpty()) {
 
                     } else {
-                        it.first().setNodeText("")
+                        it.first().setNodeText(Hawk.get("ding_pw", ""))
                     }
                 }
 
@@ -79,24 +106,199 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 }
             } else if (isMainActivity(accService, event)) {
                 L.i("钉钉首页界面")
-
                 findBottomRect(accService, findRectByText("工作", accService, event)).let {
                     L.i("工作:$it")
                     if (!it.isEmpty) {
-                        accService.touch(it.toPath())
+                        Tip.show("跳转工作Tab")
 
-                        delay(600) {
-                            accService.move(Path().apply {
-                                val realRect = accService.displayRealRect()
-                                moveTo(realRect.centerX().toFloat(), realRect.centerY().toFloat())
-                                lineTo(realRect.centerX().toFloat(), realRect.centerY().toFloat() - 400)
-                            })
+                        accService.double(it.toPath())
+
+                        delay(HTTP_DELAY) {
+                            jumpToDingCardActivity(accService)
+                        }
+                    }
+                }
+            } else if ("com.alibaba.lightapp.runtime.activity.CommonWebViewActivity" == event.className) {
+                //网页浏览界面 打卡界面就是网页
+                delay(HTTP_DELAY) {
+                    checkDingCardActivity {
+                        clickCard(accService)
+                    }
+                }
+            }
+        }
+    }
+
+    fun searchScreenWords(end: ((WordBean?) -> Unit)? = null) {
+        screenshot?.startToShot()
+        onSearchWordEnd = end
+    }
+
+    fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
+        if (!lastAppIsDingDing()) {
+            L.i("请回到钉钉界面")
+            return
+        }
+        accService.move(Path().apply {
+            val realRect = accService.displayRealRect()
+            moveTo(realRect.centerX().toFloat(), realRect.centerY().toFloat())
+            lineTo(realRect.centerX().toFloat(), realRect.centerY().toFloat() - 600)
+        }, object : GestureCallback() {
+            override fun onEnd(gestureDescription: GestureDescription?) {
+                super.onEnd(gestureDescription)
+
+                searchScreenWords {
+                    it?.let {
+                        it.getRectByWord("考勤打卡").let {
+                            if (it.isEmpty) {
+                                delay(HTTP_DELAY) {
+                                    jumpToDingCardActivity(accService)
+                                }
+                            } else {
+                                L.i("跳转打卡页面")
+                                if (lastAppIsDingDing()) {
+                                    Tip.show("跳转打卡界面")
+
+                                    accService.touch(it.toPath())
+                                } else {
+                                    L.i("请回到钉钉界面")
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    }
+
+    //检查是否是打卡界面
+    fun checkDingCardActivity(end: () -> Unit) {
+        searchScreenWords {
+            it?.let {
+                if (!it.getRectByWord("打卡").isEmpty &&
+                    !it.getRectByWord("统计").isEmpty
+                ) {
+                    end.invoke()
+                }
+            }
+        }
+    }
+
+    /**
+     * 开始打卡
+     * 1.正在定位中...
+     * 2.未到下班时间, 弹出早退打卡对话框
+     * 3.定位失败
+     * */
+    fun clickCard(accService: BaseAccessibilityService, retryCount: Int = 3) {
+        if (!lastAppIsDingDing()) {
+            L.i("请回到钉钉界面")
+            return
+        }
+
+        Tip.show("正在OCR识别打卡.")
+
+        searchScreenWords {
+            it?.let {
+                var haveCard = false
+                it.getRectByWord("下班打卡").let {
+                    L.i("下班打卡:$it")
+                    if (!it.isEmpty) {
+                        haveCard = true
+
+                        accService.touch(it.toPath())
+                    }
+                }
+                it.getRectByWord("上班打卡").let {
+                    L.i("上班打卡:$it")
+                    if (!it.isEmpty) {
+                        haveCard = true
+
+                        accService.touch(it.toPath())
+                    }
+                }
+                it.getRectByWord("更新打卡").let {
+                    L.i("更新打卡:$it")
+                    if (!it.isEmpty) {
+                        haveCard = true
+
+                        accService.touch(it.toPath())
+                    }
+                }
+
+                if (haveCard) {
+                    //判断早退
+                    Tip.show("确定打卡是否成功.")
+
+                    checkCardReult(accService)
+                } else {
+                    //没有找到
+                    if (retryCount <= 0) {
+                        Tip.show("OCR识别失败")
+
+                    } else {
+                        Tip.show("重试OCR识别")
+
+                        delay(1_000) {
+                            clickCard(accService, retryCount - 1)
                         }
                     }
                 }
             }
         }
     }
+
+    fun checkCardReult(accService: BaseAccessibilityService) {
+        delay(HTTP_DELAY) {
+            searchScreenWords {
+                it?.let { wordBean ->
+                    wordBean.getRectByWord("确定要打早退卡吗").let {
+                        if (it.isEmpty) {
+                            Tip.show("打卡成功.")
+                        } else {
+                            Tip.show("早退是不可能的.")
+
+                            wordBean.getRectByWord("不打卡").let {
+                                if (!it.isEmpty) {
+                                    accService.touch(it.toPath())
+                                }
+                            }
+                        }
+                    }
+
+                    wordBean.getRectByWord("下班打卡成功").let {
+                        if (!it.isEmpty) {
+                            Tip.show("下班打卡成功.")
+
+                            wordBean.getRectByWord("我知道了").let {
+                                if (!it.isEmpty) {
+                                    accService.touch(it.toPath())
+                                }
+                            }
+                        }
+                    }
+
+                    wordBean.getRectByWord("更新此次打卡记录").let {
+                        if (!it.isEmpty) {
+                            Tip.show("更新打卡记录.")
+
+                            wordBean.getRectByWord("取消确定").let {
+                                if (!it.isEmpty) {
+                                    accService.touch(Path().apply {
+                                        moveTo((it.right - 10).toFloat(), it.centerY().toFloat())
+                                    })
+
+                                    checkCardReult(accService)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun lastAppIsDingDing() = BaseAccessibilityService.lastPackageName == DING_DING
 
     fun isLoginActivity(event: AccessibilityEvent): Boolean {
         return "com.alibaba.android.user.login.SignUpWithPwdActivity" == event.className
@@ -128,12 +330,12 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         return result
     }
 
-    //com.alibaba.android.rimet
-    //com.alibaba.lightapp.runtime.activity.CommonWebViewActivity
+//com.alibaba.android.rimet
+//com.alibaba.lightapp.runtime.activity.CommonWebViewActivity
 
-    //com.alibaba.android.rimet
-    //com.alibaba.android.user.settings.activity.NewSettingActivity
+//com.alibaba.android.rimet
+//com.alibaba.android.user.settings.activity.NewSettingActivity
 
-    //com.alibaba.android.rimet
-    //com.alibaba.android.user.login.SignUpWithPwdActivity
+//com.alibaba.android.rimet
+//com.alibaba.android.user.login.SignUpWithPwdActivity
 }
