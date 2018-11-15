@@ -91,6 +91,8 @@ class MainActivity : BaseAppCompatActivity() {
         viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "angcyo"))
         viewHolder.exV(R.id.baidu_ak_view).setInputText(Hawk.get("baidu_ak", ""))
         viewHolder.exV(R.id.baidu_sk_view).setInputText(Hawk.get("baidu_sk", ""))
+        updateDelayTime()
+
         //viewHolder.exV(R.id.ding_pw_view).requestFocus()
 
         viewHolder.click(R.id.start_button) {
@@ -116,6 +118,15 @@ class MainActivity : BaseAppCompatActivity() {
                 Hawk.put("share_qq", "${viewHolder.tv(R.id.share_qq_view).text}")
                 Hawk.put("baidu_ak", "$ak")
                 Hawk.put("baidu_sk", "$sk")
+
+                Hawk.put(
+                    "http_delay",
+                    "${viewHolder.tv(R.id.share_qq_view).text.toString().toIntOrNull() ?: 2 * 1000L}"
+                )
+
+                updateDelayTime()
+
+                DingDingInterceptor.handEvent = true
 
                 if (Permission.check(this)) {
                     screenshot?.startCapture(this, 909)
@@ -169,7 +180,9 @@ class MainActivity : BaseAppCompatActivity() {
         }
 
         if (BuildConfig.DEBUG) {
+            viewHolder.tv(R.id.bottom_tip_text_view).text = "打卡助手为您服务!"
             viewHolder.click(R.id.bottom_tip_text_view) {
+                DingDingInterceptor.handEvent = true
                 RUtils.saveView(viewHolder.itemView).share(this)
             }
         }
@@ -199,6 +212,11 @@ class MainActivity : BaseAppCompatActivity() {
         activity?.clear()
         activity = null
         RLocalBroadcastManager.instance().unregisterBroadcast(hashCode())
+    }
+
+    fun updateDelayTime() {
+        DingDingInterceptor.HTTP_DELAY = Hawk.get("http_delay", "${DingDingInterceptor.HTTP_DELAY}").toLong()
+        viewHolder.exV(R.id.http_delay_view).setInputText("${DingDingInterceptor.HTTP_DELAY / 1000L}")
     }
 
     fun updateTipTextView() {

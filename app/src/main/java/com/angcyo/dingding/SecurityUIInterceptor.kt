@@ -24,6 +24,10 @@ class SecurityUIInterceptor : AccessibilityInterceptor() {
     override fun onAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
         super.onAccessibilityEvent(accService, event)
 
+        if (!DingDingInterceptor.handEvent) {
+            return
+        }
+
         if (isWindowStateChanged(event) /*&& touch*/) {
             findNodeByText("允许", accService, event).let {
                 if (it.isNotEmpty()) {

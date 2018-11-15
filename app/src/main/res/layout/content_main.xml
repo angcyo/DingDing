@@ -30,35 +30,61 @@
                       style="@style/BaseDarkTextStyle"
                       android:id="@+id/tip_text_view"/>
 
-            <android.support.design.widget.TextInputLayout
+            <LinearLayout
+                    android:orientation="horizontal"
                     android:layout_width="match_parent"
                     android:layout_marginTop="10dp"
                     android:layout_height="wrap_content">
 
-                <com.angcyo.uiview.less.widget.ExEditText
-                        android:id="@+id/ding_user_view"
-                        android:layout_width="match_parent"
-                        style="@style/BaseDarkTextStyle"
-                        android:inputType="number"
-                        android:hint="钉钉手机号"
-                        android:layout_height="wrap_content"/>
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content">
 
-            </android.support.design.widget.TextInputLayout>
+                    <com.angcyo.uiview.less.widget.ExEditText
+                            android:id="@+id/ding_user_view"
+                            android:layout_width="match_parent"
+                            style="@style/BaseDarkTextStyle"
+                            android:inputType="number"
+                            android:hint="钉钉手机号"
+                            android:maxLength="11"
+                            android:layout_height="wrap_content"/>
 
-            <android.support.design.widget.TextInputLayout
-                    android:layout_width="match_parent"
-                    android:layout_marginTop="10dp"
-                    android:layout_height="wrap_content">
+                </android.support.design.widget.TextInputLayout>
 
-                <com.angcyo.uiview.less.widget.ExEditText
-                        android:id="@+id/ding_pw_view"
-                        android:hint="钉钉账户密码"
-                        android:inputType="textWebPassword"
-                        android:layout_width="match_parent"
-                        style="@style/BaseDarkTextStyle"
-                        android:layout_height="wrap_content"/>
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content">
 
-            </android.support.design.widget.TextInputLayout>
+                    <com.angcyo.uiview.less.widget.ExEditText
+                            android:id="@+id/ding_pw_view"
+                            android:hint="钉钉账户密码"
+                            android:inputType="textWebPassword"
+                            android:maxLength="16"
+                            android:layout_width="match_parent"
+                            style="@style/BaseDarkTextStyle"
+                            android:layout_height="wrap_content"/>
+
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="0.4"
+                        android:layout_height="wrap_content">
+
+                    <com.angcyo.uiview.less.widget.ExEditText
+                            android:id="@+id/http_delay_view"
+                            android:hint="delay"
+                            android:inputType="number"
+                            android:maxLength="2"
+                            android:layout_width="match_parent"
+                            style="@style/BaseDarkTextStyle"
+                            android:layout_height="wrap_content"/>
+
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
 
             <TextView
                     android:layout_marginTop="10dp"
@@ -69,11 +95,12 @@
 
             <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
+                    android:layout_marginTop="2dp"
                     android:layout_height="wrap_content">
 
                 <com.angcyo.uiview.less.widget.ExEditText
                         android:id="@+id/share_qq_view"
-                        android:hint="成功后分享给QQ好友的昵称"
+                        android:hint="成功后分享给QQ好友的昵称(多个用空格隔开)"
                         android:inputType="text"
                         android:layout_width="match_parent"
                         style="@style/BaseDarkTextStyle"

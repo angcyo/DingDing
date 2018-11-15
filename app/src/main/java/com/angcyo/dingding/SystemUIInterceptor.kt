@@ -24,6 +24,10 @@ class SystemUIInterceptor : AccessibilityInterceptor() {
     override fun onAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
         super.onAccessibilityEvent(accService, event)
 
+        if (!DingDingInterceptor.handEvent) {
+            return
+        }
+
         if (isWindowStateChanged(event) /*&& touch*/) {
             //无法拿到
 //            findNodeById("button1", accService, event).let {

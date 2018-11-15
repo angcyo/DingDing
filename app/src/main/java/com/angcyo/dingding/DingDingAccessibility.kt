@@ -1,7 +1,7 @@
 package com.angcyo.dingding
 
-import android.content.Intent
 import com.angcyo.uiview.less.accessibility.BaseAccessibilityService
+import com.angcyo.uiview.less.kotlin.runActivity
 
 /**
  *
@@ -20,7 +20,7 @@ class DingDingAccessibility : BaseAccessibilityService() {
 
         Tip.show("助手已准备")
 
-        startActivity(Intent(this, MainActivity::class.java))
+        runActivity(MainActivity::class.java)
     }
 
     override fun onDestroy() {

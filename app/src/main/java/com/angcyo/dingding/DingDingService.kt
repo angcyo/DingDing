@@ -129,8 +129,15 @@ class DingDingService : BaseService() {
         if (debugRun) {
             RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
         } else {
-            RAlarmManager.setDelay(this, timeSpan[0], startPendingIntent!!)
-            RAlarmManager.setDelay(this, timeSpan[1], endPendingIntent!!)
+            if (timeSpan[0] > 0) {
+                RAlarmManager.setDelay(this, timeSpan[0], startPendingIntent!!)
+            }
+            if (timeSpan[1] > 0) {
+                RAlarmManager.setDelay(this, timeSpan[1], endPendingIntent!!)
+            } else {
+                //已经下班, 1秒后 更新打卡
+                RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
+            }
         }
 
         updateBottomTip()
@@ -152,11 +159,17 @@ class DingDingService : BaseService() {
         if (timeSpan[0] > 0) {
             spanBuilder.append("距离上班还有($startTime)   ${RUtils.formatTime(timeSpan[0] * 1000L)}")
         } else {
-            spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
+            if (timeSpan[1] > 0) {
+                spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
+            } else {
+                spanBuilder.append("今天辛苦咯 ^_^ T_T")
+            }
         }
 
         if (timeSpan[1] > 0) {
             spanBuilder.append("\n距离下班还有($endTime)   ${RUtils.formatTime(timeSpan[1] * 1000L)}")
+        } else {
+            spanBuilder.append("\n已下班($endTime)   ${RUtils.formatTime(timeSpan[1].absoluteValue * 1000L)}  更新打卡.")
         }
 
         RLocalBroadcastManager.sendBroadcast(
@@ -198,20 +211,21 @@ class DingDingService : BaseService() {
             "HH:mm:ss"
         )
 
+        //负数表示已经上班, 正数表示距离上班的时间差
         var startTime = 0L
+
+        //负数表示已下班, 正数表示距离下班的时间差
         var endTime = 0L
         if (defaultStartSpan > 0) {
             //已经上班了
             startTime = -defaultStartSpan
         } else {
             //还差多少秒上班
-//            if (startSpan) {
-//            }
-            startTime = if (startSpan > 0) 1_000 /*已经到了时间,1秒后打卡*/ else startSpan.absoluteValue
+            startTime = -startSpan
         }
 
         //距离下班还有多少秒
-        endTime = if (endSpan > 0) 1_000 /*已经到了时间,1秒后打卡*/ else endSpan.absoluteValue
+        endTime = -endSpan
 
         return longArrayOf(startTime, endTime)
     }

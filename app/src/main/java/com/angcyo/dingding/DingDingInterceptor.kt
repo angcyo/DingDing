@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Path
+import android.text.TextUtils
 import android.view.accessibility.AccessibilityEvent
 import com.angcyo.dingding.bean.WordBean
 import com.angcyo.lib.L
@@ -36,9 +37,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         var onSearchWordEnd: ((WordBean?) -> Unit)? = null
 
         /*钉钉网络请求延迟操作时间*/
-        const val HTTP_DELAY = 2_000L
+        var HTTP_DELAY = 2_000L
         /*分享图片延迟*/
-        const val SHARE_DELAY = 10_000L
+        var SHARE_DELAY = 10_000L
 
         /*是否需要处理无障碍事件*/
         var handEvent = false
@@ -146,9 +147,18 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 Tip.show("检查是否是打卡页面.")
 
                 delay(HTTP_DELAY) {
-                    checkDingCardActivity {
+                    checkDingCardActivity(3) {
                         clickCard(accService)
 //                        back(accService)
+                    }
+                }
+            } else {
+                if (lastAppIsDingDing()) {
+                    L.i("未知的界面")
+                    if (!TextUtils.isEmpty(event.className) && event.className.contains("Dialog")) {
+                        Tip.show("不支持的对话框")
+                    } else {
+                        Tip.show("不支持的界面")
                     }
                 }
             }
@@ -162,6 +172,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     }
 
     fun capture(end: ((Bitmap) -> Unit)? = null) {
+        L.i("请求捕捉屏幕...")
+
         screenshot?.setCaptureDelay(1_000)
         screenshot?.startToShot()
         onCaptureEnd = end
@@ -169,7 +181,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
     fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
         if (!lastAppIsDingDing()) {
-            L.i("请回到钉钉界面")
+            L.i("请回到钉钉首页")
+            Tip.show("请回到钉钉首页.")
             return
         }
         Tip.show("识别WebView")
@@ -187,7 +200,13 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         it.getRectByWord("勤打卡").let {
                             if (it.isEmpty) {
                                 delay(HTTP_DELAY) {
-                                    jumpToDingCardActivity(accService)
+
+                                    if (!lastAppIsDingDing()) {
+                                        L.i("请回到钉钉首页")
+                                        Tip.show("请回到钉钉首页.")
+                                    } else {
+                                        jumpToDingCardActivity(accService)
+                                    }
                                 }
                             } else {
                                 L.i("跳转打卡页面")
@@ -196,8 +215,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                                     accService.touch(it.toPath())
                                 } else {
-                                    L.i("请回到钉钉界面")
-                                    Tip.show("请回到钉钉界面")
+                                    L.i("请回到钉钉首页")
+                                    Tip.show("请回到钉钉首页")
                                 }
                             }
                         }
@@ -208,12 +227,27 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     }
 
     //检查是否是打卡界面
-    fun checkDingCardActivity(end: () -> Unit) {
+    fun checkDingCardActivity(count: Int, end: () -> Unit) {
         searchScreenWords {
             it?.let {
-                if (!it.getRectByWord("打卡").isEmpty &&
-                    !it.getRectByWord("统计").isEmpty
+                if (!it.getRectByWord("上班打卡").isEmpty
+                    || !it.getRectByWord("下班打卡").isEmpty
+                    || !it.getRectByWord("更新打卡").isEmpty
                 ) {
+                    end.invoke()
+                    return@searchScreenWords
+                }
+
+                if (it.getRectByWord("打卡").isEmpty ||
+                    it.getRectByWord("统计").isEmpty
+                ) {
+                    if (count >= 0) {
+                        Tip.show("重试${count}检查是否是打卡页面.")
+                        checkDingCardActivity(count - 1, end)
+                    } else {
+                        Tip.show("打卡页面识别失败.")
+                    }
+                } else {
                     end.invoke()
                 }
             }
@@ -228,7 +262,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
      * */
     fun clickCard(accService: BaseAccessibilityService, retryCount: Int = 3) {
         if (!lastAppIsDingDing()) {
-            L.i("请回到钉钉界面")
+            L.i("请回到钉钉打卡界面")
             return
         }
 
@@ -298,7 +332,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             searchScreenWords {
                 it?.let { wordBean ->
                     wordBean.getRectByWord("上班打卡成功").apply {
-                        L.i("上班打卡成功:$it")
+                        L.i("上班打卡成功:$this")
                         if (!this.isEmpty) {
                             Tip.show("上班打卡成功.")
 
@@ -331,7 +365,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     }
 
                     wordBean.getRectByWord("下班打卡成功").apply {
-                        L.i("下班打卡成功:$it")
+                        L.i("下班打卡成功:$this")
 
                         if (!this.isEmpty) {
                             Tip.show("下班打卡成功.")
@@ -351,11 +385,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     }
 
                     wordBean.getRectByWord("确定要打早退卡吗").apply {
-                        L.i("确定要打早退卡吗:$it")
+                        L.i("确定要打早退卡吗:$this")
 
-                        if (this.isEmpty) {
-                            Tip.show("打卡成功.")
-                        } else {
+                        if (!this.isEmpty) {
                             Tip.show("早退是不可能的.")
 
                             wordBean.getRectByWord("不打卡").let {
@@ -400,6 +432,39 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             return@searchScreenWords
                         }
                     }
+
+                    //外勤打卡
+                    wordBean.getRectByWord("外勤打卡").let {
+                        L.i("外勤打卡:$it")
+
+                        if (!it.isEmpty) {
+                            Tip.show("请前往公司再打卡")
+
+                            accService.back()
+
+                            shareQQ(accService)
+
+                            return@searchScreenWords
+                        }
+                    }
+
+                    //开始人脸识别
+                    wordBean.getRectByWord("开始人脸识别").let {
+                        L.i("开始人脸识别:$it")
+
+                        if (!it.isEmpty) {
+                            Tip.show("不支持虚拟打卡外挂.")
+
+                            accService.back()
+
+                            shareQQ(accService)
+
+                            return@searchScreenWords
+                        }
+                    }
+
+                    //
+                    Tip.show("弹出了什么鬼?")
                 }
             }
         }
