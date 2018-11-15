@@ -3,14 +3,18 @@ package com.angcyo.dingding
 import android.accessibilityservice.GestureDescription
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Path
 import android.view.accessibility.AccessibilityEvent
 import com.angcyo.dingding.bean.WordBean
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.accessibility.*
+import com.angcyo.uiview.less.kotlin.share
+import com.angcyo.uiview.less.kotlin.startApp
 import com.angcyo.uiview.less.kotlin.toBase64
 import com.angcyo.uiview.less.manager.Screenshot
 import com.orhanobut.hawk.Hawk
+import java.lang.ref.WeakReference
 
 /**
  *
@@ -35,6 +39,13 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
         /*是否需要处理无障碍事件*/
         var handEvent = false
+
+        var lastBitmap: WeakReference<Bitmap>? = null
+
+        var onCaptureEnd: ((Bitmap) -> Unit)? = null
+
+        /**正在返回*/
+        var isBack = false
     }
 
     var filterEven = FilterEven(
@@ -45,13 +56,18 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         filterPackageName = DING_DING
 
         screenshot = Screenshot.capture(context) { bitmap, _ ->
+            lastBitmap = WeakReference(bitmap)
             //            OCR.general(bitmap.toBase64())
 //            OCR.general_basic(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
 //            OCR.general(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
 //            OCR.accurate(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
+            onCaptureEnd?.invoke(bitmap)
+            onCaptureEnd = null
             OCR.general(bitmap.toBase64()) {
                 lastWordBean = it
-                onSearchWordEnd?.invoke(it)
+                val oldSearchWordEnd = onSearchWordEnd
+                onSearchWordEnd = null
+                oldSearchWordEnd?.invoke(it)
             }
         }.setAlwaysCapture(true).setAutoCapture(false).setCaptureDelay(3_00)
     }
@@ -64,6 +80,10 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
     override fun onFilterAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
         if (!handEvent) {
+            return
+        }
+
+        if (isBack) {
             return
         }
 
@@ -120,9 +140,12 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 }
             } else if ("com.alibaba.lightapp.runtime.activity.CommonWebViewActivity" == event.className) {
                 //网页浏览界面 打卡界面就是网页
+                Tip.show("检查是否是打卡页面.")
+
                 delay(HTTP_DELAY) {
                     checkDingCardActivity {
-                        clickCard(accService)
+                        //clickCard(accService)
+                        back(accService)
                     }
                 }
             }
@@ -130,8 +153,15 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     }
 
     fun searchScreenWords(end: ((WordBean?) -> Unit)? = null) {
+        screenshot?.setCaptureDelay(3_00)
         screenshot?.startToShot()
         onSearchWordEnd = end
+    }
+
+    fun capture(end: ((Bitmap) -> Unit)? = null) {
+        screenshot?.setCaptureDelay(1_000)
+        screenshot?.startToShot()
+        onCaptureEnd = end
     }
 
     fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
@@ -142,7 +172,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         accService.move(Path().apply {
             val realRect = accService.displayRealRect()
             moveTo(realRect.centerX().toFloat(), realRect.centerY().toFloat())
-            lineTo(realRect.centerX().toFloat(), realRect.centerY().toFloat() - 600)
+            lineTo(realRect.centerX().toFloat(), realRect.centerY().toFloat() - 1000)
         }, object : GestureCallback() {
             override fun onEnd(gestureDescription: GestureDescription?) {
                 super.onEnd(gestureDescription)
@@ -245,6 +275,14 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     }
                 }
             }
+
+            if (it == null) {
+                Tip.show("OCR接口失败,重试.")
+
+                delay(1_000) {
+                    clickCard(accService, retryCount - 1)
+                }
+            }
         }
     }
 
@@ -252,22 +290,40 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         delay(HTTP_DELAY) {
             searchScreenWords {
                 it?.let { wordBean ->
-                    wordBean.getRectByWord("确定要打早退卡吗").let {
-                        if (it.isEmpty) {
-                            Tip.show("打卡成功.")
-                        } else {
-                            Tip.show("早退是不可能的.")
+                    wordBean.getRectByWord("上班打卡成功").apply {
+                        L.i("上班打卡成功:$it")
+                        if (!this.isEmpty) {
+                            Tip.show("上班打卡成功.")
 
-                            wordBean.getRectByWord("不打卡").let {
-                                if (!it.isEmpty) {
-                                    accService.touch(it.toPath())
+                            delay(HTTP_DELAY) {
+                                searchScreenWords {
+                                    wordBean.getRectByWord("我知道了").let {
+                                        if (!it.isEmpty) {
+                                            accService.touch(it.toPath())
+
+                                            capture {
+                                                it.share(accService)
+
+                                                delay(3_000) {
+                                                    accService.home()
+                                                    DING_DING.startApp(accService)
+
+                                                    //上班任务结束, 等待下班
+                                                    back(accService)
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
+                            return@searchScreenWords
                         }
                     }
 
-                    wordBean.getRectByWord("下班打卡成功").let {
-                        if (!it.isEmpty) {
+                    wordBean.getRectByWord("下班打卡成功").apply {
+                        L.i("下班打卡成功:$it")
+
+                        if (!this.isEmpty) {
                             Tip.show("下班打卡成功.")
 
                             wordBean.getRectByWord("我知道了").let {
@@ -277,16 +333,54 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     //结束任务, 等待下一轮
                                     handEvent = false
 
-                                    accService.back()
-                                    accService.back()
-                                    accService.back()
-                                    accService.back()
+                                    capture {
+                                        it.share(accService)
+
+                                        delay(3_000) {
+                                            accService.home()
+                                            DING_DING.startApp(accService)
+
+                                            //上班任务结束, 等待下班
+                                            back(accService)
+                                        }
+                                    }
                                 }
                             }
+                            return@searchScreenWords
+                        }
+                    }
+
+                    wordBean.getRectByWord("确定要打早退卡吗").apply {
+                        L.i("确定要打早退卡吗:$it")
+
+                        if (this.isEmpty) {
+                            Tip.show("打卡成功.")
+                        } else {
+                            Tip.show("早退是不可能的.")
+
+                            wordBean.getRectByWord("不打卡").let {
+                                if (!it.isEmpty) {
+                                    accService.touch(it.toPath())
+
+                                    capture {
+                                        it.share(accService)
+
+                                        delay(3_000) {
+                                            accService.home()
+                                            DING_DING.startApp(accService)
+
+                                            back(accService)
+                                        }
+                                    }
+                                }
+                            }
+                            return@searchScreenWords
                         }
                     }
 
                     wordBean.getRectByWord("更新此次打卡记录").let {
+                        L.i("更新此次打卡记录:$it")
+
                         if (!it.isEmpty) {
                             Tip.show("更新打卡记录.")
 
@@ -299,6 +393,25 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     checkCardReult(accService)
                                 }
                             }
+                            return@searchScreenWords
+                        }
+                    }
+
+                    //对话框
+                    wordBean.getRectByWord("我知道了").let {
+                        L.i("我知道了:$it")
+
+                        if (!it.isEmpty) {
+                            accService.touch(it.toPath())
+
+                            delay(3_000) {
+                                accService.home()
+                                DING_DING.startApp(accService)
+
+                                back(accService)
+                            }
+
+                            return@searchScreenWords
                         }
                     }
                 }
@@ -336,6 +449,24 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             }
         }
         return result
+    }
+
+    fun back(accService: BaseAccessibilityService) {
+        isBack = true
+
+        delay(100) {
+            accService.back()
+            delay(360) {
+                accService.back()
+                delay(360) {
+                    accService.back()
+                    delay(360) {
+                        accService.back()
+                        isBack = false
+                    }
+                }
+            }
+        }
     }
 
 //com.alibaba.android.rimet

@@ -15,6 +15,8 @@ class DingDingAccessibility : BaseAccessibilityService() {
         addInterceptor(DingDingInterceptor(this))
         addInterceptor(SystemUIInterceptor())
         addInterceptor(SecurityUIInterceptor())
+        addInterceptor(SettingUIInterceptor())
+        addInterceptor(ShareQQInterceptor())
 
         Tip.show("助手已准备")
 

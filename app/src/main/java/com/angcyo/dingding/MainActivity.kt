@@ -11,6 +11,11 @@ import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
 import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
+import com.angcyo.uiview.less.kotlin.share
+import com.angcyo.uiview.less.manager.RLocalBroadcastManager
+import com.angcyo.uiview.less.manager.Screenshot
+import com.angcyo.uiview.less.utils.RUtils
+import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
 
@@ -18,6 +23,8 @@ import java.lang.ref.WeakReference
 class MainActivity : BaseAppCompatActivity() {
 
     companion object {
+        const val UPDATE = "update"
+        const val UPDATE_TIME = "update_time"
         var activity: WeakReference<Activity>? = null
     }
 
@@ -80,6 +87,7 @@ class MainActivity : BaseAppCompatActivity() {
 
         viewHolder.exV(R.id.ding_user_view).setInputText(Hawk.get("ding_user", ""))
         viewHolder.exV(R.id.ding_pw_view).setInputText(Hawk.get("ding_pw", ""))
+        viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "angcyo"))
         //viewHolder.exV(R.id.ding_pw_view).requestFocus()
 
         viewHolder.click(R.id.start_button) {
@@ -89,6 +97,7 @@ class MainActivity : BaseAppCompatActivity() {
                 //开始挂机
                 Hawk.put("ding_user", "${viewHolder.tv(R.id.ding_user_view).text}")
                 Hawk.put("ding_pw", "${viewHolder.tv(R.id.ding_pw_view).text}")
+                Hawk.put("share_qq", "${viewHolder.tv(R.id.share_qq_view).text}")
 
                 if (Permission.check(this)) {
                     DingDingService.resetTime()
@@ -107,10 +116,39 @@ class MainActivity : BaseAppCompatActivity() {
             Tip.showTip = !isChecked
         }
         viewHolder.cb(R.id.close_float_box).isChecked = !Tip.showTip
+
+        RLocalBroadcastManager
+            .instance()
+            .registerBroadcast(
+                hashCode(),
+                RLocalBroadcastManager.OnBroadcastReceiver { _, intent, action ->
+                    if (action == UPDATE) {
+                        updateBottomTipTextView(
+                            intent.getBundleExtra(RLocalBroadcastManager.KEY_EXTRA).getString("text") ?: ""
+                        )
+                    } else if (action == UPDATE_TIME) {
+                        updateTipTextView()
+                    }
+                }, UPDATE, UPDATE_TIME
+            )
+
+        viewHolder.click(R.id.test_button) {
+            T_.show("请锁屏.")
+            viewHolder.postDelay(5_000) {
+                Screenshot.wakeUpAndUnlock(this)
+            }
+        }
+
+        if (BuildConfig.DEBUG) {
+            viewHolder.click(R.id.bottom_tip_text_view) {
+                RUtils.saveView(viewHolder.itemView).share(this)
+            }
+        }
     }
 
     override fun onResume() {
         super.onResume()
+        ignoreBatteryOptimization()
 
         updateTipTextView()
     }
@@ -119,6 +157,7 @@ class MainActivity : BaseAppCompatActivity() {
         super.onDestroy()
         activity?.clear()
         activity = null
+        RLocalBroadcastManager.instance().unregisterBroadcast(hashCode())
     }
 
     fun updateTipTextView() {
@@ -137,7 +176,15 @@ class MainActivity : BaseAppCompatActivity() {
             viewHolder.tv(R.id.start_button).text = "开始挂机"
         }
 
+        builder.append("\n请将程序添加到`电池优化`白名单.")
+
         viewHolder.tv(R.id.tip_text_view).text = builder
+    }
+
+    fun updateBottomTipTextView(text: String) {
+        val bottomBuilder = StringBuilder()
+        bottomBuilder.append(text)
+        viewHolder.tv(R.id.bottom_tip_text_view).text = bottomBuilder
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -145,5 +192,10 @@ class MainActivity : BaseAppCompatActivity() {
         screenshot?.onActivityResult(resultCode, data) {
             BaseService.start(this, DingDingService::class.java)
         }
+    }
+
+    override fun onBackPressed() {
+        moveTaskToBack(true)
+        //super.onBackPressed()
     }
 }

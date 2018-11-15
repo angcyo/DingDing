@@ -56,6 +56,21 @@
 
         </android.support.design.widget.TextInputLayout>
 
+        <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content">
+
+            <com.angcyo.uiview.less.widget.ExEditText
+                    android:id="@+id/share_qq_view"
+                    android:hint="成功后分享给QQ好友的昵称"
+                    android:inputType="text"
+                    android:layout_width="match_parent"
+                    style="@style/BaseDarkTextStyle"
+                    android:layout_height="wrap_content"/>
+
+        </android.support.design.widget.TextInputLayout>
+
         <android.support.v7.widget.SwitchCompat
                 android:id="@+id/close_float_box"
                 android:text="关闭浮窗提示 "
@@ -72,6 +87,26 @@
                 android:textSize="@dimen/base_title_size"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
+
+        <com.angcyo.uiview.less.widget.Button
+                android:id="@+id/test_button"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="10dp"
+                android:text="测试亮屏解锁(5s)"
+                android:textSize="@dimen/base_title_size"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+
+        <TextView
+                android:id="@+id/bottom_tip_text_view"
+                android:layout_width="wrap_content"
+                tools:text="angcyo"
+                android:padding="4dp"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:layout_gravity="center_horizontal"
+                android:layout_height="wrap_content"
+                style="@style/BaseDarkTextStyle"/>
 
     </LinearLayout>
 
