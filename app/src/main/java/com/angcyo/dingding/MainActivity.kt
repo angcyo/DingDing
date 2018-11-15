@@ -15,7 +15,6 @@ import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.share
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
-import com.angcyo.uiview.less.utils.RUtils
 import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
@@ -121,7 +120,7 @@ class MainActivity : BaseAppCompatActivity() {
 
                 Hawk.put(
                     "http_delay",
-                    "${viewHolder.tv(R.id.share_qq_view).text.toString().toIntOrNull() ?: 2 * 1000L}"
+                    "${(viewHolder.tv(R.id.http_delay_view).text.toString().toIntOrNull() ?: 2) * 1000L}"
                 )
 
                 updateDelayTime()
@@ -183,7 +182,8 @@ class MainActivity : BaseAppCompatActivity() {
             viewHolder.tv(R.id.bottom_tip_text_view).text = "打卡助手为您服务!"
             viewHolder.click(R.id.bottom_tip_text_view) {
                 DingDingInterceptor.handEvent = true
-                RUtils.saveView(viewHolder.itemView).share(this)
+                //RUtils.saveView(viewHolder.itemView).share(this)
+                "分享文本测试".share(this)
             }
         }
 

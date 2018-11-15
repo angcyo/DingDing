@@ -8,6 +8,7 @@ import com.angcyo.lib.L
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.nextInt
 import com.angcyo.uiview.less.kotlin.nowTime
+import com.angcyo.uiview.less.kotlin.share
 import com.angcyo.uiview.less.kotlin.spiltTime
 import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RAlarmManager
@@ -250,6 +251,20 @@ class DingDingService : BaseService() {
             //隔天, 重置任务 和定时广播
             if (spiltTime[2] != lastDay) {
                 resetTime()
+
+                shareTime()
+            }
+
+//            if (debugRun) {
+//                shareTime()
+//            }
+
+            //心跳提示, 用来提示软件还活着
+            if (spiltTime[3] == 7 &&
+                (spiltTime[4] % 10 == 0) &&
+                spiltTime[5] == 0
+            ) {
+                shareTime(true)
             }
 
             /**采用定时广播的方式实现*/
@@ -346,5 +361,22 @@ class DingDingService : BaseService() {
             handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, 1_000)
         }
         return true
+    }
+
+    fun shareTime(heart: Boolean = false) {
+        val spiltTime = nowTime().spiltTime()
+
+        val shareTextBuilder = StringBuilder()
+        shareTextBuilder.append("来自`${RUtils.getAppName(this)}`提醒:")
+        shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
+        shareTextBuilder.append("\n上班:${startTime}")
+        shareTextBuilder.append("\n下班:${endTime}")
+
+        if (heart) {
+            shareTextBuilder.append("\n助手还活着请放心.")
+        }
+
+        DingDingInterceptor.handEvent = true
+        shareTextBuilder.toString().share(this)
     }
 }
