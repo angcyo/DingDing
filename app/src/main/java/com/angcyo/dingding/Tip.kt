@@ -31,8 +31,8 @@ object Tip {
         }
         if (view == null) {
             view = FloatWindow.with(RApplication.getApp())
-                .setX(Screen.width, 0.8f)
-                .setY(Screen.height, 0.8f)
+                .setX(Screen.width, 0.7f)
+                .setY(Screen.height, 0.9f)
                 .setView(R.layout.layout_tip)
                 .build(true)
         }

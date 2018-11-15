@@ -71,13 +71,56 @@
 
         </android.support.design.widget.TextInputLayout>
 
-        <android.support.v7.widget.SwitchCompat
-                android:id="@+id/close_float_box"
-                android:text="关闭浮窗提示 "
-                style="@style/BaseDarkTextStyle"
+        <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
                 android:layout_marginTop="10dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content">
+
+            <com.angcyo.uiview.less.widget.ExEditText
+                    android:id="@+id/baidu_ak_view"
+                    android:hint="百度OCR API Key"
+                    android:inputType="text"
+                    android:layout_width="match_parent"
+                    style="@style/BaseDarkTextStyle"
+                    android:layout_height="wrap_content"/>
+
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+                android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content">
+
+            <com.angcyo.uiview.less.widget.ExEditText
+                    android:id="@+id/baidu_sk_view"
+                    android:hint="百度OCR Secret Key"
+                    android:inputType="text"
+                    android:layout_width="match_parent"
+                    style="@style/BaseDarkTextStyle"
+                    android:layout_height="wrap_content"/>
+
+        </android.support.design.widget.TextInputLayout>
+
+        <FrameLayout android:layout_width="match_parent"
+                     android:layout_height="wrap_content">
+
+            <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/close_float_box"
+                    android:text="关闭浮窗提示 "
+                    style="@style/BaseDarkTextStyle"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            <android.support.v7.widget.SwitchCompat
+                    android:id="@+id/debug_box"
+                    android:text="调试运行  "
+                    android:layout_gravity="right"
+                    style="@style/BaseDarkTextStyle"
+                    android:layout_marginTop="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+        </FrameLayout>
 
         <com.angcyo.uiview.less.widget.Button
                 android:id="@+id/start_button"

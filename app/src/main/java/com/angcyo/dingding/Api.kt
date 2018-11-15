@@ -1,5 +1,6 @@
 package com.angcyo.dingding
 
+import com.orhanobut.hawk.Hawk
 import okhttp3.ResponseBody
 import retrofit2.http.*
 import rx.Observable
@@ -15,8 +16,8 @@ interface Api {
     @POST("https://aip.baidubce.com/oauth/2.0/token")
     fun getToken(
         @Query("grant_type") grant_type: String = "client_credentials",
-        @Query("client_id") client_id: String = "vGcIcmO6OWnPcBBv9TzZryiD",
-        @Query("client_secret") client_secret: String = "Aa8lePlFQ8cp1py9GZUrrdkZGEyY2Tln"
+        @Query("client_id") client_id: String = Hawk.get("baidu_ak", "vGcIcmO6OWnPcBBv9TzZryiD"),
+        @Query("client_secret") client_secret: String = Hawk.get("baidu_sk", "Aa8lePlFQ8cp1py9GZUrrdkZGEyY2Tln")
     ): Observable<ResponseBody>
 
 

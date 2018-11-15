@@ -9,6 +9,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.angcyo.dingding.bean.WordBean
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.accessibility.*
+import com.angcyo.uiview.less.kotlin.runMain
 import com.angcyo.uiview.less.kotlin.share
 import com.angcyo.uiview.less.kotlin.startApp
 import com.angcyo.uiview.less.kotlin.toBase64
@@ -36,6 +37,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
         /*钉钉网络请求延迟操作时间*/
         const val HTTP_DELAY = 2_000L
+        /*分享图片延迟*/
+        const val SHARE_DELAY = 10_000L
 
         /*是否需要处理无障碍事件*/
         var handEvent = false
@@ -144,8 +147,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                 delay(HTTP_DELAY) {
                     checkDingCardActivity {
-                        //clickCard(accService)
-                        back(accService)
+                        clickCard(accService)
+//                        back(accService)
                     }
                 }
             }
@@ -260,6 +263,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     //判断早退
                     Tip.show("确定打卡是否成功.")
 
+                    //打卡结果页识别
                     checkCardReult(accService)
                 } else {
                     //没有找到
@@ -302,9 +306,12 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                             accService.touch(it.toPath())
 
                                             capture {
+                                                Tip.show("分享至QQ")
+
+                                                isBack = true
                                                 it.share(accService)
 
-                                                delay(3_000) {
+                                                delay(SHARE_DELAY) {
                                                     accService.home()
                                                     DING_DING.startApp(accService)
 
@@ -333,17 +340,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     //结束任务, 等待下一轮
                                     handEvent = false
 
-                                    capture {
-                                        it.share(accService)
-
-                                        delay(3_000) {
-                                            accService.home()
-                                            DING_DING.startApp(accService)
-
-                                            //上班任务结束, 等待下班
-                                            back(accService)
-                                        }
-                                    }
+                                    shareQQ(accService)
                                 }
                             }
                             return@searchScreenWords
@@ -362,16 +359,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                 if (!it.isEmpty) {
                                     accService.touch(it.toPath())
 
-                                    capture {
-                                        it.share(accService)
-
-                                        delay(3_000) {
-                                            accService.home()
-                                            DING_DING.startApp(accService)
-
-                                            back(accService)
-                                        }
-                                    }
+                                    shareQQ(accService)
                                 }
                             }
                             return@searchScreenWords
@@ -404,15 +392,35 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         if (!it.isEmpty) {
                             accService.touch(it.toPath())
 
-                            delay(3_000) {
-                                accService.home()
-                                DING_DING.startApp(accService)
-
-                                back(accService)
-                            }
+                            shareQQ(accService)
 
                             return@searchScreenWords
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    fun shareQQ(accService: BaseAccessibilityService) {
+        capture {
+            Tip.show("分享至QQ")
+
+            isBack = true
+            it.share(accService)
+
+            delay(SHARE_DELAY) {
+                accService.home()
+
+                delay(1_000) {
+                    isBack = true
+
+                    Tip.show("开始回退界面,请等待")
+
+                    DING_DING.startApp(accService)
+
+                    delay(5_000) {
+                        back(accService)
                     }
                 }
             }
@@ -453,8 +461,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
     fun back(accService: BaseAccessibilityService) {
         isBack = true
+        Tip.show("开始回退钉钉界面")
 
-        delay(100) {
+        delay(300) {
             accService.back()
             delay(360) {
                 accService.back()
@@ -463,6 +472,14 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     delay(360) {
                         accService.back()
                         isBack = false
+
+                        Tip.show("回退结束.")
+
+                        delay(1_000) {
+                            Tip.show("恭喜,流程结束!.")
+
+                            accService.runMain()
+                        }
                     }
                 }
             }
