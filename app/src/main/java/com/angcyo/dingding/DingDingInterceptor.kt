@@ -233,6 +233,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 if (!it.getRectByWord("上班打卡").isEmpty
                     || !it.getRectByWord("下班打卡").isEmpty
                     || !it.getRectByWord("更新打卡").isEmpty
+                    || !it.getRectByWord("外勤打卡").isEmpty
                 ) {
                     end.invoke()
                     return@searchScreenWords
@@ -296,6 +297,17 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     }
                 }
 
+                it.getRectByWord("外勤打卡").let {
+                    L.i("外勤打卡:$it")
+                    if (!it.isEmpty) {
+                        Tip.show("请前往公司再打卡")
+
+                        shareQQ(accService)
+
+                        return@searchScreenWords
+                    }
+                }
+
                 if (haveCard) {
                     //判断早退
                     Tip.show("确定打卡是否成功.")
@@ -308,7 +320,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         Tip.show("OCR识别失败")
 
                     } else {
-                        Tip.show("重试OCR识别")
+                        Tip.show("重试$retryCount OCR识别")
 
                         delay(1_000) {
                             clickCard(accService, retryCount - 1)
