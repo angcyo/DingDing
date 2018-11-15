@@ -47,6 +47,7 @@
                   android:exported="true">
             <intent-filter>
                 <action android:name="com.angcyo.alarm"/>
+                <action android:name="com.angcyo.ding.run"/>
             </intent-filter>
         </receiver>
     </application>

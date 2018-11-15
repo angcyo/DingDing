@@ -124,17 +124,19 @@ class DingDingService : BaseService() {
 
         val timeSpan = calcTimeSpan()
 
-        startPendingIntent = AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java)
-        endPendingIntent = AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java)
+        startPendingIntent =
+                AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+        endPendingIntent =
+                AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
 
         if (debugRun) {
             RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
         } else {
             if (timeSpan[0] > 0) {
-                RAlarmManager.setDelay(this, timeSpan[0], startPendingIntent!!)
+                RAlarmManager.setDelay(this, timeSpan[0] * 1_000L, startPendingIntent!!)
             }
             if (timeSpan[1] > 0) {
-                RAlarmManager.setDelay(this, timeSpan[1], endPendingIntent!!)
+                RAlarmManager.setDelay(this, timeSpan[1] * 1_000L, endPendingIntent!!)
             } else {
                 //已经下班, 1秒后 更新打卡
                 RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
@@ -179,7 +181,7 @@ class DingDingService : BaseService() {
     }
 
     /**
-     * 返回 正常打卡 范围内的 上下班有效时间间隔
+     * 返回 正常打卡 范围内的 上下班有效时间间隔. 秒
      * */
     fun calcTimeSpan(): LongArray {
         val spiltTime = nowTime().spiltTime()

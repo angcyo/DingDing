@@ -13,8 +13,12 @@ import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
  */
 class TimeAlarmReceiver : AlarmBroadcastReceiver() {
 
+    companion object {
+        const val RUN = "com.angcyo.ding.run"
+    }
+
     override fun onReceive(context: Context, intent: Intent, action: String) {
-        if (ACTION_ALARM.equals(action, ignoreCase = true)) {
+        if (RUN.equals(action, ignoreCase = true)) {
             BaseService.start(context, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
         }
     }
