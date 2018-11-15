@@ -15,6 +15,7 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
     init {
         filterPackageNameList.add("android")
         filterPackageNameList.add("com.tencent.mobileqq")
+        filterPackageNameList.add("com.huawei.android.internal.app")
     }
 
     /**是否点了转发*/
@@ -23,12 +24,17 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
     override fun onAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
         super.onAccessibilityEvent(accService, event)
         if (isWindowStateChanged(event)) {
-            if (event.packageName == "android") {
+            if (event.packageName == "android" || event.packageName == "com.huawei.android.internal.app") {
                 //分享选择框
                 findNodeByText("发送给好友", accService, event).let {
                     L.i("发送给好友:${it.size}")
                     it.firstOrNull()?.let {
                         accService.touch(it.toRect().toPath())
+                    }
+
+                    if (it.isEmpty()) {
+                        Tip.show("请先安装QQ")
+                        accService.back()
                     }
                 }
             } else if (event.packageName == "com.tencent.mobileqq") {

@@ -10,148 +10,158 @@
         android:padding="8dp"
         tools:context=".MainActivity">
 
-    <LinearLayout
-            android:orientation="vertical"
+    <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:focusable="true"
-            android:focusableInTouchMode="true"
             android:layout_height="wrap_content">
 
-        <TextView android:layout_width="wrap_content"
-                  tools:text="angcyo"
-                  android:padding="4dp"
-                  android:gravity="center"
-                  android:layout_gravity="center_horizontal"
-                  android:layout_height="wrap_content"
-                  style="@style/BaseDarkTextStyle"
-                  android:id="@+id/tip_text_view"/>
-
-        <android.support.design.widget.TextInputLayout
+        <LinearLayout
+                android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_marginTop="10dp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
                 android:layout_height="wrap_content">
 
-            <com.angcyo.uiview.less.widget.ExEditText
-                    android:id="@+id/ding_user_view"
+            <TextView android:layout_width="wrap_content"
+                      tools:text="angcyo"
+                      android:padding="4dp"
+                      android:gravity="center"
+                      android:layout_gravity="center_horizontal"
+                      android:layout_height="wrap_content"
+                      style="@style/BaseDarkTextStyle"
+                      android:id="@+id/tip_text_view"/>
+
+            <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
-                    style="@style/BaseDarkTextStyle"
-                    android:inputType="number"
-                    android:hint="钉钉手机号"
-                    android:layout_height="wrap_content"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_height="wrap_content">
-
-            <com.angcyo.uiview.less.widget.ExEditText
-                    android:id="@+id/ding_pw_view"
-                    android:hint="钉钉账户密码"
-                    android:inputType="textWebPassword"
-                    android:layout_width="match_parent"
-                    style="@style/BaseDarkTextStyle"
-                    android:layout_height="wrap_content"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_height="wrap_content">
-
-            <com.angcyo.uiview.less.widget.ExEditText
-                    android:id="@+id/share_qq_view"
-                    android:hint="成功后分享给QQ好友的昵称"
-                    android:inputType="text"
-                    android:layout_width="match_parent"
-                    style="@style/BaseDarkTextStyle"
-                    android:layout_height="wrap_content"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_height="wrap_content">
-
-            <com.angcyo.uiview.less.widget.ExEditText
-                    android:id="@+id/baidu_ak_view"
-                    android:hint="百度OCR API Key"
-                    android:inputType="text"
-                    android:layout_width="match_parent"
-                    style="@style/BaseDarkTextStyle"
-                    android:layout_height="wrap_content"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-        <android.support.design.widget.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_height="wrap_content">
-
-            <com.angcyo.uiview.less.widget.ExEditText
-                    android:id="@+id/baidu_sk_view"
-                    android:hint="百度OCR Secret Key"
-                    android:inputType="text"
-                    android:layout_width="match_parent"
-                    style="@style/BaseDarkTextStyle"
-                    android:layout_height="wrap_content"/>
-
-        </android.support.design.widget.TextInputLayout>
-
-        <FrameLayout android:layout_width="match_parent"
-                     android:layout_height="wrap_content">
-
-            <android.support.v7.widget.SwitchCompat
-                    android:id="@+id/close_float_box"
-                    android:text="关闭浮窗提示 "
-                    style="@style/BaseDarkTextStyle"
                     android:layout_marginTop="10dp"
+                    android:layout_height="wrap_content">
+
+                <com.angcyo.uiview.less.widget.ExEditText
+                        android:id="@+id/ding_user_view"
+                        android:layout_width="match_parent"
+                        style="@style/BaseDarkTextStyle"
+                        android:inputType="number"
+                        android:hint="钉钉手机号"
+                        android:layout_height="wrap_content"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_height="wrap_content">
+
+                <com.angcyo.uiview.less.widget.ExEditText
+                        android:id="@+id/ding_pw_view"
+                        android:hint="钉钉账户密码"
+                        android:inputType="textWebPassword"
+                        android:layout_width="match_parent"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_height="wrap_content"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <TextView
+                    android:layout_marginTop="10dp"
+                    android:text="请确保联系人在`最近联系人`界面中"
+                    style="@style/BaseDarkTextStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
 
-            <android.support.v7.widget.SwitchCompat
-                    android:id="@+id/debug_box"
-                    android:text="调试运行  "
-                    android:layout_gravity="right"
-                    style="@style/BaseDarkTextStyle"
+            <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <com.angcyo.uiview.less.widget.ExEditText
+                        android:id="@+id/share_qq_view"
+                        android:hint="成功后分享给QQ好友的昵称"
+                        android:inputType="text"
+                        android:layout_width="match_parent"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_height="wrap_content"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
                     android:layout_marginTop="10dp"
+                    android:layout_height="wrap_content">
+
+                <com.angcyo.uiview.less.widget.ExEditText
+                        android:id="@+id/baidu_ak_view"
+                        android:hint="百度OCR API Key"
+                        android:inputType="text"
+                        android:layout_width="match_parent"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_height="wrap_content"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_height="wrap_content">
+
+                <com.angcyo.uiview.less.widget.ExEditText
+                        android:id="@+id/baidu_sk_view"
+                        android:hint="百度OCR Secret Key"
+                        android:inputType="text"
+                        android:layout_width="match_parent"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_height="wrap_content"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <FrameLayout android:layout_width="match_parent"
+                         android:layout_height="wrap_content">
+
+                <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/close_float_box"
+                        android:text="关闭浮窗提示 "
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_marginTop="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+                <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/debug_box"
+                        android:text="调试运行  "
+                        android:layout_gravity="right"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_marginTop="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+            </FrameLayout>
+
+            <com.angcyo.uiview.less.widget.Button
+                    android:id="@+id/start_button"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:text="开始挂机"
+                    android:textSize="@dimen/base_title_size"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"/>
-        </FrameLayout>
 
-        <com.angcyo.uiview.less.widget.Button
-                android:id="@+id/start_button"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:text="开始挂机"
-                android:textSize="@dimen/base_title_size"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+            <com.angcyo.uiview.less.widget.Button
+                    android:id="@+id/test_button"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="10dp"
+                    android:text="测试亮屏解锁(5s)"
+                    android:textSize="@dimen/base_title_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
 
-        <com.angcyo.uiview.less.widget.Button
-                android:id="@+id/test_button"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:text="测试亮屏解锁(5s)"
-                android:textSize="@dimen/base_title_size"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+            <TextView
+                    android:id="@+id/bottom_tip_text_view"
+                    android:layout_width="wrap_content"
+                    tools:text="angcyo"
+                    android:padding="4dp"
+                    android:layout_marginTop="20dp"
+                    android:gravity="center"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_height="wrap_content"
+                    style="@style/BaseDarkTextStyle"/>
 
-        <TextView
-                android:id="@+id/bottom_tip_text_view"
-                android:layout_width="wrap_content"
-                tools:text="angcyo"
-                android:padding="4dp"
-                android:layout_marginTop="20dp"
-                android:gravity="center"
-                android:layout_gravity="center_horizontal"
-                android:layout_height="wrap_content"
-                style="@style/BaseDarkTextStyle"/>
-
-    </LinearLayout>
-
+        </LinearLayout>
+    </android.support.v4.widget.NestedScrollView>
 
 </android.support.constraint.ConstraintLayout>

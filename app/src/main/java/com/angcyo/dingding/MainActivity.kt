@@ -13,8 +13,6 @@ import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.share
-import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
-import com.angcyo.uiview.less.manager.RAlarmManager
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.RUtils
@@ -101,8 +99,8 @@ class MainActivity : BaseAppCompatActivity() {
                 Hawk.put("baidu_sk", "Aa8lePlFQ8cp1py9GZUrrdkZGEyY2Tln")
             }
 
-            val ak = "${viewHolder.tv(R.id.baidu_ak_view).text}"
-            val sk = "${viewHolder.tv(R.id.baidu_sk_view).text}"
+            val ak = "${viewHolder.tv(R.id.baidu_ak_view).text.trim()}"
+            val sk = "${viewHolder.tv(R.id.baidu_sk_view).text.trim()}"
             if (TextUtils.isEmpty(ak) || TextUtils.isEmpty(sk)) {
                 T_.error("请申请百度云OCR")
                 return@click

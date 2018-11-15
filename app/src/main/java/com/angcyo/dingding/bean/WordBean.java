@@ -54,27 +54,39 @@ public class WordBean {
     /**
      * 返回指定关键字, 在图片中的矩形坐标
      */
-    public Rect getRectByWord(String word) {
+    public Rect getRectByWord(String... words) {
         Rect rect = new Rect();
 
         boolean isHaveFull = false;
         //完整匹配
         for (WordsResultBean bean : getWords_result()) {
-            if (TextUtils.equals(bean.words, word)) {
-                isHaveFull = true;
-                rect.set(bean.location.left, bean.location.top,
-                        bean.location.left + bean.location.width,
-                        bean.location.top + bean.location.height);
+            for (String w : words) {
+                if (TextUtils.equals(bean.words, w)) {
+                    isHaveFull = true;
+                    rect.set(bean.location.left, bean.location.top,
+                            bean.location.left + bean.location.width,
+                            bean.location.top + bean.location.height);
+                    break;
+                }
+            }
+            if (isHaveFull) {
                 break;
             }
         }
 
+        boolean isHave = false;
         if (!isHaveFull) {
             for (WordsResultBean bean : getWords_result()) {
-                if (bean.words.contains(word)) {
-                    rect.set(bean.location.left, bean.location.top,
-                            bean.location.left + bean.location.width,
-                            bean.location.top + bean.location.height);
+                for (String w : words) {
+                    if (bean.words.contains(w)) {
+                        isHave = true;
+                        rect.set(bean.location.left, bean.location.top,
+                                bean.location.left + bean.location.width,
+                                bean.location.top + bean.location.height);
+                        break;
+                    }
+                }
+                if (isHave) {
                     break;
                 }
             }

@@ -172,17 +172,19 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             L.i("请回到钉钉界面")
             return
         }
+        Tip.show("识别WebView")
         accService.move(Path().apply {
             val realRect = accService.displayRealRect()
-            moveTo(realRect.centerX().toFloat(), realRect.centerY().toFloat())
-            lineTo(realRect.centerX().toFloat(), realRect.centerY().toFloat() - 1000)
+            L.i("屏幕大小:$realRect")
+            moveTo(realRect.centerX().toFloat(), realRect.height().toFloat() * 4f / 5f)
+            lineTo(realRect.centerX().toFloat(), realRect.height().toFloat() * 2f / 5f)
         }, object : GestureCallback() {
             override fun onEnd(gestureDescription: GestureDescription?) {
                 super.onEnd(gestureDescription)
 
                 searchScreenWords {
                     it?.let {
-                        it.getRectByWord("考勤打卡").let {
+                        it.getRectByWord("勤打卡").let {
                             if (it.isEmpty) {
                                 delay(HTTP_DELAY) {
                                     jumpToDingCardActivity(accService)
@@ -195,6 +197,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     accService.touch(it.toPath())
                                 } else {
                                     L.i("请回到钉钉界面")
+                                    Tip.show("请回到钉钉界面")
                                 }
                             }
                         }
