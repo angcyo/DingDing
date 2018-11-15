@@ -205,6 +205,8 @@ class MainActivity : BaseAppCompatActivity() {
         ignoreBatteryOptimization()
 
         updateTipTextView()
+
+        OCR.loadConfig()
     }
 
     override fun onDestroy() {

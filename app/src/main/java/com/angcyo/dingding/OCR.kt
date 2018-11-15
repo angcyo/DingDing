@@ -1,5 +1,6 @@
 package com.angcyo.dingding
 
+import com.angcyo.dingding.bean.ConfigBean
 import com.angcyo.dingding.bean.TokenBean
 import com.angcyo.dingding.bean.WordBean
 import com.angcyo.http.Http
@@ -15,6 +16,21 @@ import com.angcyo.uiview.less.utils.T_
 object OCR {
     var tokenBean: TokenBean? = null
     var isIng = false
+    var configBean = ConfigBean()
+
+    fun loadConfig() {
+        Http.create(Api::class.java)
+            .config()
+            .compose(Http.transformerBean(ConfigBean::class.java))
+            .subscribe(object : HttpSubscriber<ConfigBean>() {
+                override fun onEnd(data: ConfigBean?, error: Throwable?) {
+                    super.onEnd(data, error)
+                    data?.let {
+                        configBean = it
+                    }
+                }
+            })
+    }
 
     fun getToken(end: (TokenBean) -> Unit) {
         if (tokenBean == null) {

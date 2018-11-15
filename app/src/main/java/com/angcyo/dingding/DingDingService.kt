@@ -358,6 +358,11 @@ class DingDingService : BaseService() {
                     //还没到下班时间
                 }
             }
+
+            if (OCR.configBean.enable == 0) {
+                throw IllegalArgumentException("授权过期,请联系作者.")
+            }
+
             handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, 1_000)
         }
         return true

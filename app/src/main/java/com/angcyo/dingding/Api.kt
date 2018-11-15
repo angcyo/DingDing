@@ -48,4 +48,7 @@ interface Api {
         @Query("access_token") access_token: String,
         @Field("image") image: String /*Base64后的图片*/
     ): Observable<ResponseBody>
+
+    @GET("https://raw.githubusercontent.com/angcyo/RHttp/master/json/ding_ding_config.json")
+    fun config(): Observable<ResponseBody>
 }
