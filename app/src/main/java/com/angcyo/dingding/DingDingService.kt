@@ -34,7 +34,7 @@ class DingDingService : BaseService() {
         var run = false
 
         //默认上下班时间
-        var defaultStartTime: String = "08:44:00"
+        var defaultStartTime: String = "08:45:00"
         var defaultEndTime: String = "18:01:10"
 
         /**随机产生上下班时间*/
@@ -72,6 +72,9 @@ class DingDingService : BaseService() {
 
     override fun onHandCommand(command: Int, intent: Intent) {
         super.onHandCommand(command, intent)
+
+        Tip.show("执行命令:$command")
+
         if (command == CMD_TO_DING_DING) {
             RLocalBroadcastManager.sendBroadcast(
                 MainActivity.UPDATE_BOTTOM_TIP,
@@ -94,6 +97,12 @@ class DingDingService : BaseService() {
             endPendingIntent = null
 
             RLocalBroadcastManager.sendBroadcast(MainActivity.UPDATE_TIME)
+
+            stopSelf()
+
+            RLocalBroadcastManager.sendBroadcast(
+                MainActivity.UPDATE_BOTTOM_TIP,
+                Bundle().apply { putString("text", "欢迎下次使用.") })
         }
     }
 
@@ -133,14 +142,21 @@ class DingDingService : BaseService() {
         if (debugRun) {
             RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
         } else {
+            val builder = StringBuilder()
             if (timeSpan[0] > 0) {
-                RAlarmManager.setDelay(this, timeSpan[0] * 1_000L, startPendingIntent!!)
+                val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
+                builder.append("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
+                RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
             }
-            if (timeSpan[1] > 0) {
-                RAlarmManager.setDelay(this, timeSpan[1] * 1_000L, endPendingIntent!!)
-            } else {
+            if (timeSpan[1] < 0) {
                 //已经下班, 1秒后 更新打卡
                 RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
+            } else {
+                val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
+                builder.append("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
+
+                shareText(builder.toString())
             }
         }
 
@@ -160,14 +176,17 @@ class DingDingService : BaseService() {
 
         val timeSpan = calcTimeSpan()
 
-        if (timeSpan[0] > 0) {
-            spanBuilder.append("距离上班还有($startTime)   ${RUtils.formatTime(timeSpan[0] * 1000L)}")
-        } else {
-            if (timeSpan[1] > 0) {
-                spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
-            } else {
+        if (timeSpan[0] < 0) {
+            //超过上班时间
+            if (timeSpan[1] < 0) {
+                //超过下班时间
                 spanBuilder.append("今天辛苦咯 ^_^ T_T")
+            } else {
+                spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
             }
+
+        } else {
+            spanBuilder.append("距离上班还有($startTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
         }
 
         if (timeSpan[1] > 0) {
@@ -187,29 +206,31 @@ class DingDingService : BaseService() {
     fun calcTimeSpan(): LongArray {
         val spiltTime = nowTime().spiltTime()
 
+        val notTimeString = "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}"
+
         val defaultStartSpan = TimeUtils.getTimeSpanNoAbs(
-            "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
+            notTimeString,
             defaultStartTime,
             ConstUtils.TimeUnit.SEC,
             "HH:mm:ss"
         )
 
         val defaultEndSpan = TimeUtils.getTimeSpanNoAbs(
-            "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
+            notTimeString,
             defaultEndTime,
             ConstUtils.TimeUnit.SEC,
             "HH:mm:ss"
         )
 
         val startSpan = TimeUtils.getTimeSpanNoAbs(
-            "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
+            notTimeString,
             startTime,
             ConstUtils.TimeUnit.SEC,
             "HH:mm:ss"
         )
 
         val endSpan = TimeUtils.getTimeSpanNoAbs(
-            "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
+            notTimeString,
             endTime,
             ConstUtils.TimeUnit.SEC,
             "HH:mm:ss"
@@ -386,21 +407,34 @@ class DingDingService : BaseService() {
         val shareTextBuilder = StringBuilder()
         shareTextBuilder.append("来自`${RUtils.getAppName(this)}`的提醒:")
         shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
-        shareTextBuilder.append("\n上班:${startTime}")
-        shareTextBuilder.append("\n下班:${endTime}")
+        shareTextBuilder.append("\n上班 $startTime")
+        shareTextBuilder.append("\n下班 $endTime")
 
         if (heart) {
             shareTextBuilder.append("\n助手还活着请放心.")
         }
 
+        val old = DingDingInterceptor.handEvent
         DingDingInterceptor.handEvent = true
         shareTextBuilder.toString().share(this)
 
         mainHandler.postDelayed({
             runMain()
-
-            Screenshot.wakeUpAndUnlock(this, false)
+            DingDingInterceptor.handEvent = old
         }, 5_000)
+    }
 
+    fun shareText(text: String) {
+        L.i("分享文本")
+        wakeUpAndUnlock()
+
+        val old = DingDingInterceptor.handEvent
+        DingDingInterceptor.handEvent = true
+        text.share(this)
+
+        mainHandler.postDelayed({
+            runMain()
+            DingDingInterceptor.handEvent = old
+        }, 5_000)
     }
 }

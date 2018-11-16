@@ -25,6 +25,8 @@ class DingDingAccessibility : BaseAccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
+        Tip.show("助手已断开服务.")
+
         DingDingInterceptor.screenshot?.destroy()
     }
 }

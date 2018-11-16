@@ -19,6 +19,7 @@ class TimeAlarmReceiver : AlarmBroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent, action: String) {
         if (RUN.equals(action, ignoreCase = true)) {
+            Tip.show("定时:开始打卡")
             BaseService.start(context, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
         }
     }

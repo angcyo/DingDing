@@ -86,7 +86,7 @@ class MainActivity : BaseAppCompatActivity() {
 
         viewHolder.exV(R.id.ding_user_view).setInputText(Hawk.get("ding_user", ""))
         viewHolder.exV(R.id.ding_pw_view).setInputText(Hawk.get("ding_pw", ""))
-        viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "angcyo"))
+        viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "默认电脑"))
         viewHolder.exV(R.id.baidu_ak_view).setInputText(Hawk.get("baidu_ak", ""))
         viewHolder.exV(R.id.baidu_sk_view).setInputText(Hawk.get("baidu_sk", ""))
         updateDelayTime()
@@ -234,8 +234,6 @@ class MainActivity : BaseAppCompatActivity() {
             Tip.show("助手挂机中...")
         } else {
             viewHolder.tv(R.id.start_button).text = "开始挂机"
-
-            Tip.show("打卡助手为您服务!")
         }
 
         builder.append("\n请将程序添加到`电池优化`白名单.")
@@ -257,6 +255,8 @@ class MainActivity : BaseAppCompatActivity() {
             updateTipTextView()
         }
         screenshot?.onActivityResult(resultCode, data) {
+            DingDingInterceptor.handEvent = false
+
             DingDingService.isTaskStart = !DingDingService.isTaskStart
 
             updateTipTextView()
