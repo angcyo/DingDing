@@ -40,4 +40,10 @@ object Tip {
             it.findViewById<TextView>(R.id.text_view).text = tip
         }
     }
+
+    fun hide() {
+        FloatWindow.destroy()
+        view = null
+    }
+
 }

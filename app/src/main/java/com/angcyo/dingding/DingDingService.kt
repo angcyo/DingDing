@@ -103,6 +103,8 @@ class DingDingService : BaseService() {
             RLocalBroadcastManager.sendBroadcast(
                 MainActivity.UPDATE_BOTTOM_TIP,
                 Bundle().apply { putString("text", "欢迎下次使用.") })
+
+            Tip.hide()
         }
     }
 
