@@ -12,7 +12,6 @@ import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
 import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
-import com.angcyo.uiview.less.kotlin.share
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.T_
@@ -133,10 +132,6 @@ class MainActivity : BaseAppCompatActivity() {
                     return@click
                 }
             }
-
-            DingDingService.isTaskStart = !DingDingService.isTaskStart
-
-            updateTipTextView()
         }
 
         viewHolder.cb(R.id.close_float_box, !Tip.showTip) { _, isChecked ->
@@ -181,9 +176,11 @@ class MainActivity : BaseAppCompatActivity() {
         if (BuildConfig.DEBUG) {
             viewHolder.tv(R.id.bottom_tip_text_view).text = "打卡助手为您服务!"
             viewHolder.click(R.id.bottom_tip_text_view) {
-                DingDingInterceptor.handEvent = true
+                //DingDingInterceptor.handEvent = true
                 //RUtils.saveView(viewHolder.itemView).share(this)
-                "分享文本测试".share(this)
+                //"分享文本测试".share(this)
+
+                Screenshot.wakeUpAndUnlock(this, false)
             }
         }
 
@@ -225,16 +222,20 @@ class MainActivity : BaseAppCompatActivity() {
         val builder = StringBuilder()
         val km: KeyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         if (km.isKeyguardSecure) {
-            builder.append("取消锁屏密码,可以自动`亮屏``解锁`\n")
+            builder.append("取消锁屏密码,可以自动`亮屏``解锁(8.0)`\n")
         }
         builder.append("输入`钉钉手机号和密码`,可以自动登录钉钉")
 
         if (DingDingService.isTaskStart) {
             viewHolder.tv(R.id.start_button).text = "停止挂机"
-            builder.append("\n本次上班打卡预设时间:${DingDingService.startTime}")
-            builder.append("\n本次下班打卡预设时间:${DingDingService.endTime}")
+//            builder.append("\n本次上班打卡预设时间:${DingDingService.startTime}")
+//            builder.append("\n本次下班打卡预设时间:${DingDingService.endTime}")
+
+            Tip.show("助手挂机中...")
         } else {
             viewHolder.tv(R.id.start_button).text = "开始挂机"
+
+            Tip.show("打卡助手为您服务!")
         }
 
         builder.append("\n请将程序添加到`电池优化`白名单.")
@@ -251,7 +252,15 @@ class MainActivity : BaseAppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode != -1) {
+            DingDingService.isTaskStart = false
+            updateTipTextView()
+        }
         screenshot?.onActivityResult(resultCode, data) {
+            DingDingService.isTaskStart = !DingDingService.isTaskStart
+
+            updateTipTextView()
+
             BaseService.start(this, DingDingService::class.java, DingDingService.CMD_RESET_TIME)
         }
     }

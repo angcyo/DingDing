@@ -6,10 +6,7 @@ import android.os.Bundle
 import android.os.Message
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.base.BaseService
-import com.angcyo.uiview.less.kotlin.nextInt
-import com.angcyo.uiview.less.kotlin.nowTime
-import com.angcyo.uiview.less.kotlin.share
-import com.angcyo.uiview.less.kotlin.spiltTime
+import com.angcyo.uiview.less.kotlin.*
 import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RAlarmManager
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
@@ -61,6 +58,10 @@ class DingDingService : BaseService() {
 
         /**任务已开始*/
         var isTaskStart = false
+            set(value) {
+                field = value
+                DingDingInterceptor.handEvent = false
+            }
     }
 
     override fun onCreate() {
@@ -233,12 +234,17 @@ class DingDingService : BaseService() {
         return longArrayOf(startTime, endTime)
     }
 
-    fun toDingDing() {
+    /**亮屏和解锁*/
+    fun wakeUpAndUnlock() {
         if (MainActivity.activity == null || MainActivity.activity?.get() == null) {
             Screenshot.wakeUpAndUnlock(this)
         } else {
             Screenshot.wakeUpAndUnlock(MainActivity.activity!!.get()!!)
         }
+    }
+
+    fun toDingDing() {
+        wakeUpAndUnlock()
 
         DingDingInterceptor.handEvent = true
         RUtils.startApp(this, DingDingInterceptor.DING_DING)
@@ -263,7 +269,7 @@ class DingDingService : BaseService() {
 
             //心跳提示, 用来提示软件还活着
             if (spiltTime[3] == 7 &&
-                (spiltTime[4] % 10 == 0) &&
+                (spiltTime[4] % (if (BuildConfig.DEBUG) 10 else 10) == 0) &&
                 spiltTime[5] == 0
             ) {
                 shareTime(true)
@@ -371,10 +377,14 @@ class DingDingService : BaseService() {
     }
 
     fun shareTime(heart: Boolean = false) {
+        L.i("分享心跳")
+
+        wakeUpAndUnlock()
+
         val spiltTime = nowTime().spiltTime()
 
         val shareTextBuilder = StringBuilder()
-        shareTextBuilder.append("来自`${RUtils.getAppName(this)}`提醒:")
+        shareTextBuilder.append("来自`${RUtils.getAppName(this)}`的提醒:")
         shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
         shareTextBuilder.append("\n上班:${startTime}")
         shareTextBuilder.append("\n下班:${endTime}")
@@ -385,5 +395,12 @@ class DingDingService : BaseService() {
 
         DingDingInterceptor.handEvent = true
         shareTextBuilder.toString().share(this)
+
+        mainHandler.postDelayed({
+            runMain()
+
+            Screenshot.wakeUpAndUnlock(this, false)
+        }, 5_000)
+
     }
 }
