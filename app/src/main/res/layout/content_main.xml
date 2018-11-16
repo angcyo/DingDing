@@ -200,6 +200,17 @@
                     android:layout_height="wrap_content"
                     style="@style/BaseDarkTextStyle"/>
 
+            <TextView
+                    android:id="@+id/device_tip_text_view"
+                    android:layout_width="wrap_content"
+                    tools:text="angcyo"
+                    android:padding="4dp"
+                    android:layout_marginTop="40dp"
+                    android:gravity="center"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_height="wrap_content"
+                    style="@style/BaseDarkTextStyle"/>
+
         </LinearLayout>
     </android.support.v4.widget.NestedScrollView>
 

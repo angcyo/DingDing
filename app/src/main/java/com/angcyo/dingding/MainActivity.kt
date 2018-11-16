@@ -14,6 +14,7 @@ import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
+import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
@@ -204,6 +205,8 @@ class MainActivity : BaseAppCompatActivity() {
         updateTipTextView()
 
         OCR.loadConfig()
+
+        viewHolder.tv(R.id.device_tip_text_view).text = Root.device_info(this)
     }
 
     override fun onDestroy() {
