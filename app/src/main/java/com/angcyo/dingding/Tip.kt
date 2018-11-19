@@ -3,7 +3,9 @@ package com.angcyo.dingding
 import android.annotation.SuppressLint
 import android.view.View
 import android.widget.TextView
+import com.angcyo.http.Rx
 import com.angcyo.uiview.less.RApplication
+import com.angcyo.uiview.less.utils.RUtils
 import com.orhanobut.hawk.Hawk
 import com.yhao.floatwindow.FloatWindow
 import com.yhao.floatwindow.Screen
@@ -31,6 +33,12 @@ object Tip {
     private var view: View? = null
     fun show(tip: String) {
         if (!showTip) {
+            return
+        }
+        if (!RUtils.isMainThread()) {
+            Rx.main {
+                show(tip)
+            }
             return
         }
         if (view == null) {
