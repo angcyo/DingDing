@@ -217,21 +217,34 @@ class DingDingService : BaseService() {
         } else {
             val timeSpan = calcTimeSpan()
 
+            val formatStartTime = RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)
             if (timeSpan[0] < 0) {
                 //超过上班时间
                 if (timeSpan[1] < 0) {
                     //超过下班时间
                     spanBuilder.append("今天辛苦咯 ^_^ T_T")
                 } else {
-                    spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
+                    spanBuilder.append("已上班($defaultStartTime)   $formatStartTime")
                 }
 
             } else {
-                spanBuilder.append("距离上班还有($startTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
+                spanBuilder.append("距离上班还有($startTime)   $formatStartTime")
+
+                if (timeSpan[0] < 10 * 60) {
+                    //10分钟内, tip提示
+                    Tip.show("即将上班:$formatStartTime")
+                }
             }
 
             if (timeSpan[1] > 0) {
-                spanBuilder.append("\n距离下班还有($endTime)   ${RUtils.formatTime(timeSpan[1] * 1000L)}")
+                val formatTime = RUtils.formatTime(timeSpan[1] * 1000L)
+
+                spanBuilder.append("\n距离下班还有($endTime)   $formatTime")
+
+                if (timeSpan[1] < 10 * 60) {
+                    //10分钟内, tip提示
+                    Tip.show("即将下班:$formatTime")
+                }
             } else {
                 spanBuilder.append("\n已下班($endTime)   ${RUtils.formatTime(timeSpan[1].absoluteValue * 1000L)}  更新打卡.")
             }
