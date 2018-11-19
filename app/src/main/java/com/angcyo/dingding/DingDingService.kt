@@ -12,6 +12,7 @@ import com.angcyo.uiview.less.manager.RAlarmManager
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.RUtils
+import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.utilcode.utils.ConstUtils
 import com.angcyo.uiview.less.utils.utilcode.utils.TimeUtils
 import kotlin.math.absoluteValue
@@ -35,6 +36,8 @@ class DingDingService : BaseService() {
         const val TASK_SHARE_SHOT = 800
         /**立即执行打卡*/
         const val TASK_JUST_DING = 801
+        /**分享测试*/
+        const val TASK_SHARE_TEST = 802
 
         @Deprecated("使用定时器控制")
         var run = false
@@ -75,14 +78,10 @@ class DingDingService : BaseService() {
 
     override fun onCreate() {
         super.onCreate()
-
-        handler.sendEmptyMessage(MSG_CHECK_TIME)
-        handler.sendEmptyMessageDelayed(MSG_GET_CONFIG, CHECK_TASK_DELAY)
     }
 
     override fun onHandCommand(command: Int, intent: Intent) {
         super.onHandCommand(command, intent)
-
         Tip.show("执行命令:$command")
 
         if (command == CMD_TO_DING_DING) {
@@ -92,6 +91,9 @@ class DingDingService : BaseService() {
 
             toDingDing()
         } else if (command == CMD_RESET_TIME) {
+            handler.sendEmptyMessage(MSG_CHECK_TIME)
+            handler.sendEmptyMessageDelayed(MSG_GET_CONFIG, CHECK_TASK_DELAY)
+
             resetTime()
         } else if (command == CMD_STOP) {
             isTaskStart = false
@@ -119,6 +121,16 @@ class DingDingService : BaseService() {
             shareScreenshot()
         } else if (command == TASK_JUST_DING) {
             toDingDing()
+        } else if (command == TASK_SHARE_TEST) {
+            val testBuilder = StringBuilder()
+            testBuilder.append("正在测试的消息:\n")
+            val nowTime = nowTime().spiltTime()
+            testBuilder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
+            testBuilder.append("${nowTime[3]}:${nowTime[4]}:${nowTime[5]}:${nowTime[6]} ")
+            testBuilder.append("周${nowTime[7]}\n")
+            testBuilder.append("是否是节假日:${OCR.isHoliday()}\n")
+            testBuilder.append(Root.initImei())
+            shareText(testBuilder.toString())
         }
     }
 
@@ -139,6 +151,7 @@ class DingDingService : BaseService() {
         lastDay = spiltTime[2]
 
         RLocalBroadcastManager.sendBroadcast(MainActivity.UPDATE_TIME)
+        OCR.month()
 
         startPendingIntent?.let {
             RAlarmManager.cancel(this, it)
@@ -176,10 +189,10 @@ class DingDingService : BaseService() {
             }
         }
 
-        updateBottomTip()
+        updateBottomTipBroadcast()
     }
 
-    fun updateBottomTip() {
+    private fun updateBottomTipBroadcast() {
         val spanBuilder = StringBuilder()
 
         if (!isTaskStart) {
@@ -289,7 +302,7 @@ class DingDingService : BaseService() {
 
     override fun onHandleMessage(msg: Message): Boolean {
         if (msg.what == MSG_CHECK_TIME) {
-            updateBottomTip()
+            updateBottomTipBroadcast()
 
             val spiltTime = nowTime().spiltTime()
 

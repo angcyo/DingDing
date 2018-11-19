@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.widget.TextView
 import com.angcyo.uiview.less.RApplication
+import com.orhanobut.hawk.Hawk
 import com.yhao.floatwindow.FloatWindow
 import com.yhao.floatwindow.Screen
 
@@ -22,6 +23,9 @@ object Tip {
                 FloatWindow.destroy()
                 view = null
             }
+        }
+        get() {
+            return Hawk.get("show_tip", true)
         }
 
     private var view: View? = null

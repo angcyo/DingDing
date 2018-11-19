@@ -52,4 +52,11 @@ interface Api {
     @GET("https://raw.githubusercontent.com/angcyo/RHttp/master/json/ding_ding_config.json")
     @Headers("Cache-Control:no-cache")
     fun config(): Observable<ResponseBody>
+
+    //year-month=2018-11&key=ac109219ff1fb1d32d40913de1d27238
+    @POST("http://v.juhe.cn/calendar/month")
+    fun month(
+        @Query("year-month") year_month: String,
+        @Query("key") key: String = "ac109219ff1fb1d32d40913de1d27238"
+    ): Observable<ResponseBody>
 }

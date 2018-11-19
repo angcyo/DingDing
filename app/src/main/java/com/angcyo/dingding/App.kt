@@ -11,5 +11,7 @@ import com.angcyo.uiview.less.RApplication
 class App : RApplication() {
     override fun onInit() {
         super.onInit()
+
+        OCR.month()
     }
 }

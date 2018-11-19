@@ -9,10 +9,14 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.text.TextUtils
 import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
+import com.angcyo.lib.L
+import com.angcyo.uiview.less.RApplication
 import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.copy
+import com.angcyo.uiview.less.kotlin.nowTime
+import com.angcyo.uiview.less.kotlin.spiltTime
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.Root
@@ -32,59 +36,10 @@ class MainActivity : BaseAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity = WeakReference(this)
-
-//        window.setFlags(
-//            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-//            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-//        )
-
         setContentView(R.layout.activity_main)
-
-
-//        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-
         setSupportActionBar(viewHolder.v(R.id.toolbar))
 
-//        viewHolder.view(R.id.fab).setOnClickListener { view ->
-//            //startActivity(Intent(this, TestActivity::class.java))
-//
-//            if (BuildConfig.DEBUG) {
-//                viewHolder.postDelay(3000) {
-//                    L.w("点亮屏幕")
-//                    Screenshot.wakeUpAndUnlock(this)
-//                }
-//                return@setOnClickListener
-//            }
-//
-//            SystemUIInterceptor.navigatorBarHeight = navigatorBarHeight()
-//            SystemUIInterceptor.touch = true
-//
-//            L.i("height:${navigatorBarHeight()}")
-//
-//            if (Permission.check(this)) {
-//                screenshot?.startCapture(this, 909)
-//            }
-//        }
-
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 900)
-
-//        screenshot = Screenshot.capture(this) { bitmap, filePath ->
-//            Log.i(
-//                "angcyo",
-//                "${bitmap.allocationByteCount.toLong()}   ${Formatter.formatFileSize(
-//                    this@MainActivity,
-//                    bitmap.allocationByteCount.toLong()
-//                )}"
-//            )
-//            findViewById<ImageView>(R.id.image_view).setImageBitmap(bitmap)
-//
-//            findViewById<ImageView>(R.id.image_view2).setImageBitmap(bitmap.toBytes()?.toBitmap())
-//
-////            OCR.general(bitmap.toBase64())
-//            OCR.general_basic(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
-//            OCR.general(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
-//            OCR.accurate(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
-//        }.setAlwaysCapture(false).setCaptureDelay(1_000)
 
         viewHolder.exV(R.id.ding_user_view).setInputText(Hawk.get("ding_user", ""))
         viewHolder.exV(R.id.ding_pw_view).setInputText(Hawk.get("ding_pw", ""))
@@ -136,9 +91,11 @@ class MainActivity : BaseAppCompatActivity() {
             }
         }
 
-        viewHolder.cb(R.id.close_float_box, !Tip.showTip) { _, isChecked ->
-            Tip.showTip = !isChecked
+        viewHolder.cb(R.id.close_float_box, Tip.showTip, "show_tip") { _, isChecked ->
+            Tip.showTip = isChecked
         }
+
+        viewHolder.cb(R.id.holiday_box, OCR.jumpHoliday, "holiday_box", null)
 
         viewHolder.cb(R.id.debug_box, DingDingService.debugRun) { _, isChecked ->
             DingDingService.debugRun = isChecked
@@ -175,6 +132,10 @@ class MainActivity : BaseAppCompatActivity() {
 //            RUtils.killMyAllProcess(this)
         }
 
+        viewHolder.click(R.id.test_share_button) {
+            BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.TASK_SHARE_TEST)
+        }
+
         if (BuildConfig.DEBUG) {
             viewHolder.tv(R.id.bottom_tip_text_view).text = "打卡助手为您服务!"
             viewHolder.click(R.id.bottom_tip_text_view) {
@@ -185,18 +146,6 @@ class MainActivity : BaseAppCompatActivity() {
                 Screenshot.wakeUpAndUnlock(this, false)
             }
         }
-
-//        RAlarmManager.setDelay(
-//            this,
-//            3_000L,
-//            AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java)
-//        )
-//
-//        RAlarmManager.setDelay(
-//            this,
-//            4_000L,
-//            AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java)
-//        )
 
         viewHolder.tv(R.id.uuid_text_view).text = Root.initImei()
         viewHolder.click(R.id.uuid_text_view) {
@@ -212,6 +161,9 @@ class MainActivity : BaseAppCompatActivity() {
         updateTipTextView()
 
         viewHolder.tv(R.id.device_tip_text_view).text = Root.device_info(this)
+
+        val spiltTime = nowTime().spiltTime()
+        L.i("今天周:${spiltTime[7]} 节假日:${OCR.isHoliday()}")
     }
 
     override fun onDestroy() {
