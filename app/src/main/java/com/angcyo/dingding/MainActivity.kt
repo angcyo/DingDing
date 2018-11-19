@@ -12,6 +12,7 @@ import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
 import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
+import com.angcyo.uiview.less.kotlin.copy
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.Root
@@ -196,6 +197,12 @@ class MainActivity : BaseAppCompatActivity() {
 //            4_000L,
 //            AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java)
 //        )
+
+        viewHolder.tv(R.id.uuid_text_view).text = Root.initImei()
+        viewHolder.click(R.id.uuid_text_view) {
+            Root.initImei().copy()
+            T_.show("已复制")
+        }
     }
 
     override fun onResume() {

@@ -2,6 +2,7 @@ package com.angcyo.dingding
 
 import com.angcyo.uiview.less.accessibility.BaseAccessibilityService
 import com.angcyo.uiview.less.kotlin.runActivity
+import com.angcyo.uiview.less.utils.RUtils
 
 /**
  *
@@ -21,6 +22,7 @@ class DingDingAccessibility : BaseAccessibilityService() {
         Tip.show("助手已准备")
 
         runActivity(MainActivity::class.java)
+        RUtils.saveToSDCardFolder("run_main", "DingDingAccessibility")
     }
 
     override fun onDestroy() {
