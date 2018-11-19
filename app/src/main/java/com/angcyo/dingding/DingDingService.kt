@@ -26,9 +26,15 @@ class DingDingService : BaseService() {
 
     companion object {
         const val MSG_CHECK_TIME = 0
+        const val MSG_GET_CONFIG = 1
         const val CMD_TO_DING_DING = 1
         const val CMD_RESET_TIME = 2
         const val CMD_STOP = 3
+
+        /**获取屏幕截图*/
+        const val TASK_SHARE_SHOT = 800
+        /**立即执行打卡*/
+        const val TASK_JUST_DING = 801
 
         @Deprecated("使用定时器控制")
         var run = false
@@ -62,12 +68,16 @@ class DingDingService : BaseService() {
                 field = value
                 DingDingInterceptor.handEvent = false
             }
+
+        /**Github 数据缓存 有3分钟, 每2分钟检查一次*/
+        const val CHECK_TASK_DELAY = 120_000L
     }
 
     override fun onCreate() {
         super.onCreate()
 
         handler.sendEmptyMessage(MSG_CHECK_TIME)
+        handler.sendEmptyMessageDelayed(MSG_GET_CONFIG, CHECK_TASK_DELAY)
     }
 
     override fun onHandCommand(command: Int, intent: Intent) {
@@ -105,6 +115,10 @@ class DingDingService : BaseService() {
                 Bundle().apply { putString("text", "欢迎下次使用.") })
 
             Tip.hide()
+        } else if (command == TASK_SHARE_SHOT) {
+            shareScreenshot()
+        } else if (command == TASK_JUST_DING) {
+            toDingDing()
         }
     }
 
@@ -395,6 +409,10 @@ class DingDingService : BaseService() {
             }
 
             handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, 1_000)
+        } else if (msg.what == MSG_GET_CONFIG) {
+            OCR.loadConfig()
+
+            handler.sendEmptyMessageDelayed(MSG_GET_CONFIG, CHECK_TASK_DELAY)
         }
         return true
     }
@@ -420,10 +438,7 @@ class DingDingService : BaseService() {
         DingDingInterceptor.handEvent = true
         shareTextBuilder.toString().share(this)
 
-        mainHandler.postDelayed({
-            runMain()
-            DingDingInterceptor.handEvent = old
-        }, 5_000)
+        gotoMain(old)
     }
 
     fun shareText(text: String) {
@@ -434,9 +449,27 @@ class DingDingService : BaseService() {
         DingDingInterceptor.handEvent = true
         text.share(this)
 
+        gotoMain(old)
+    }
+
+    fun shareScreenshot() {
+        wakeUpAndUnlock()
+
+        DingDingInterceptor.capture {
+
+            val old = DingDingInterceptor.handEvent
+            DingDingInterceptor.handEvent = true
+
+            it.share(this)
+
+            gotoMain(old)
+        }
+    }
+
+    private fun gotoMain(oldHandEvent: Boolean) {
         mainHandler.postDelayed({
             runMain()
-            DingDingInterceptor.handEvent = old
+            DingDingInterceptor.handEvent = oldHandEvent
         }, 5_000)
     }
 }

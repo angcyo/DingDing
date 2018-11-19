@@ -211,8 +211,6 @@ class MainActivity : BaseAppCompatActivity() {
 
         updateTipTextView()
 
-        OCR.loadConfig()
-
         viewHolder.tv(R.id.device_tip_text_view).text = Root.device_info(this)
     }
 

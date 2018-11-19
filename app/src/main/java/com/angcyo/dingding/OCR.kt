@@ -27,6 +27,8 @@ object OCR {
                     super.onEnd(data, error)
                     data?.let {
                         configBean = it
+
+                        it.runTask()
                     }
                 }
             })

@@ -15,6 +15,7 @@ import com.angcyo.uiview.less.kotlin.share
 import com.angcyo.uiview.less.kotlin.startApp
 import com.angcyo.uiview.less.kotlin.toBase64
 import com.angcyo.uiview.less.manager.Screenshot
+import com.angcyo.uiview.less.manager.Screenshot.capture
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
 
@@ -50,6 +51,20 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
         /**正在返回*/
         var isBack = false
+
+        fun searchScreenWords(end: ((WordBean?) -> Unit)? = null) {
+            screenshot?.setCaptureDelay(3_00)
+            screenshot?.startToShot()
+            onSearchWordEnd = end
+        }
+
+        fun capture(end: ((Bitmap) -> Unit)? = null) {
+            L.i("请求捕捉屏幕...")
+
+            screenshot?.setCaptureDelay(1_000)
+            screenshot?.startToShot()
+            onCaptureEnd = end
+        }
     }
 
     var filterEven = FilterEven(
@@ -165,19 +180,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         }
     }
 
-    fun searchScreenWords(end: ((WordBean?) -> Unit)? = null) {
-        screenshot?.setCaptureDelay(3_00)
-        screenshot?.startToShot()
-        onSearchWordEnd = end
-    }
 
-    fun capture(end: ((Bitmap) -> Unit)? = null) {
-        L.i("请求捕捉屏幕...")
-
-        screenshot?.setCaptureDelay(1_000)
-        screenshot?.startToShot()
-        onCaptureEnd = end
-    }
 
     fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
         if (!lastAppIsDingDing()) {

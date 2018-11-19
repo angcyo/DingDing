@@ -50,5 +50,6 @@ interface Api {
     ): Observable<ResponseBody>
 
     @GET("https://raw.githubusercontent.com/angcyo/RHttp/master/json/ding_ding_config.json")
+    @Headers("Cache-Control:no-cache")
     fun config(): Observable<ResponseBody>
 }
