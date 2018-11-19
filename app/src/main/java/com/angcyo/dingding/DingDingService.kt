@@ -161,31 +161,35 @@ class DingDingService : BaseService() {
             RAlarmManager.cancel(this, it)
         }
 
-        val timeSpan = calcTimeSpan()
-
-        startPendingIntent =
-                AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
-        endPendingIntent =
-                AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
-
-        if (debugRun) {
-            RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
+        if (OCR.isHoliday()) {
+            //节假日
         } else {
-            val builder = StringBuilder()
-            if (timeSpan[0] > 0) {
-                val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
-                builder.append("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
-                RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
-            }
-            if (timeSpan[1] < 0) {
-                //已经下班, 1秒后 更新打卡
-                RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
-            } else {
-                val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
-                builder.append("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
-                RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
+            val timeSpan = calcTimeSpan()
 
-                shareText(builder.toString())
+            startPendingIntent =
+                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+            endPendingIntent =
+                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+
+            if (debugRun) {
+                RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
+            } else {
+                val builder = StringBuilder()
+                if (timeSpan[0] > 0) {
+                    val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
+                    builder.append("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
+                    RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
+                }
+                if (timeSpan[1] < 0) {
+                    //已经下班, 1秒后 更新打卡
+                    RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
+                } else {
+                    val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
+                    builder.append("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                    RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
+
+                    shareText(builder.toString())
+                }
             }
         }
 
@@ -203,25 +207,34 @@ class DingDingService : BaseService() {
             return
         }
 
-        val timeSpan = calcTimeSpan()
+        if (OCR.isHoliday()) {
+            //节假日
+            val nowTime = nowTime().spiltTime()
+            spanBuilder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
+            spanBuilder.append("周${nowTime[7]}\n")
 
-        if (timeSpan[0] < 0) {
-            //超过上班时间
-            if (timeSpan[1] < 0) {
-                //超过下班时间
-                spanBuilder.append("今天辛苦咯 ^_^ T_T")
+            spanBuilder.append("今天放假哦 ^_^ T_T")
+        } else {
+            val timeSpan = calcTimeSpan()
+
+            if (timeSpan[0] < 0) {
+                //超过上班时间
+                if (timeSpan[1] < 0) {
+                    //超过下班时间
+                    spanBuilder.append("今天辛苦咯 ^_^ T_T")
+                } else {
+                    spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
+                }
+
             } else {
-                spanBuilder.append("已上班($defaultStartTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
+                spanBuilder.append("距离上班还有($startTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
             }
 
-        } else {
-            spanBuilder.append("距离上班还有($startTime)   ${RUtils.formatTime(timeSpan[0].absoluteValue * 1000L)}")
-        }
-
-        if (timeSpan[1] > 0) {
-            spanBuilder.append("\n距离下班还有($endTime)   ${RUtils.formatTime(timeSpan[1] * 1000L)}")
-        } else {
-            spanBuilder.append("\n已下班($endTime)   ${RUtils.formatTime(timeSpan[1].absoluteValue * 1000L)}  更新打卡.")
+            if (timeSpan[1] > 0) {
+                spanBuilder.append("\n距离下班还有($endTime)   ${RUtils.formatTime(timeSpan[1] * 1000L)}")
+            } else {
+                spanBuilder.append("\n已下班($endTime)   ${RUtils.formatTime(timeSpan[1].absoluteValue * 1000L)}  更新打卡.")
+            }
         }
 
         RLocalBroadcastManager.sendBroadcast(
