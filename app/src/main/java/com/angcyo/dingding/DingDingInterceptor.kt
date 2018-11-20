@@ -15,7 +15,6 @@ import com.angcyo.uiview.less.kotlin.share
 import com.angcyo.uiview.less.kotlin.startApp
 import com.angcyo.uiview.less.kotlin.toBase64
 import com.angcyo.uiview.less.manager.Screenshot
-import com.angcyo.uiview.less.manager.Screenshot.capture
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
 
@@ -181,7 +180,6 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     }
 
 
-
     fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
         if (!lastAppIsDingDing()) {
             L.i("请回到钉钉首页")
@@ -320,8 +318,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 } else {
                     //没有找到
                     if (retryCount <= 0) {
-                        Tip.show("OCR识别失败")
-
+                        //Tip.show("OCR识别失败")
+                        checkCardReult(accService, false)
                     } else {
                         Tip.show("重试$retryCount OCR识别")
 
@@ -342,7 +340,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         }
     }
 
-    fun checkCardReult(accService: BaseAccessibilityService) {
+    fun checkCardReult(accService: BaseAccessibilityService, isInCardUI: Boolean = true /*是否是打卡界面*/) {
         delay(HTTP_DELAY) {
             searchScreenWords {
                 it?.let { wordBean ->
@@ -478,8 +476,11 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         }
                     }
 
-                    //
-                    Tip.show("弹出了什么鬼?")
+                    if (isInCardUI) {
+                        Tip.show("弹出了什么鬼?")
+                    } else {
+                        Tip.show("OCR未识别.")
+                    }
                 }
             }
         }
