@@ -22,9 +22,7 @@ class TimeAlarmReceiver : AlarmBroadcastReceiver() {
         if (RUN.equals(action, ignoreCase = true)) {
             Tip.show("定时:开始打卡")
             BaseService.start(context, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
-        } else if (Intent.ACTION_SCREEN_OFF.equals(action, ignoreCase = true) ||
-            Intent.ACTION_CLOSE_SYSTEM_DIALOGS.equals(action, ignoreCase = true)
-        ) {
+        } else if (Intent.ACTION_SCREEN_OFF.equals(action, ignoreCase = true)) {
             context.runMain()
         }
     }
