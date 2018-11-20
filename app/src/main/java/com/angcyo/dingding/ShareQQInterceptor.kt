@@ -1,8 +1,10 @@
 package com.angcyo.dingding
 
+import android.os.Build
 import android.view.accessibility.AccessibilityEvent
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.accessibility.*
+import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
 
 /**
@@ -28,8 +30,16 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
             return
         }
 
+        if (BuildConfig.DEBUG) {
+            if (event.packageName == "android") {
+                BaseAccessibilityService.logNodeInfo(accService.rootInActiveWindow)
+                BaseAccessibilityService.logNodeInfo(event.source)
+            }
+        }
+
         if (isWindowStateChanged(event)) {
             if (event.packageName == "android" || event.packageName == "com.huawei.android.internal.app") {
+
                 isForwardClick = false
 
                 LogFile.log("弹窗包名: ${event.packageName} ")
@@ -49,7 +59,11 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
                             }
 
                             if (it.isEmpty()) {
-                                Tip.show("请先安装QQ")
+                                if (Build.MODEL == "OPPO A83") {
+                                    T_.error("不支持 OPPO A83")
+                                } else {
+                                    Tip.show("请先安装QQ")
+                                }
                                 accService.back()
                             }
                         }
