@@ -38,6 +38,7 @@ public class ConfigBean {
     public String deviceAllow = "7050bc11-58a9-4197-b9c3-f6e20dae64c3," +
             "82239675-4c04-44fc-bb98-3ced2eac7486," +
             "19bcf218-864a-4719-956a-026b3a330d41," +
+            "e5c2503f-42dc-4f1c-b9f4-00e8cbe8e840" +
             "5b56d9cd-ff8a-414a-a833-ed85d8ec0958";
 
     /**
