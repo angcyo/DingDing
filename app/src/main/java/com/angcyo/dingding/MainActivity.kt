@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.text.TextUtils
 import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
+import com.angcyo.http.Http
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.RApplication
 import com.angcyo.uiview.less.accessibility.Permission
@@ -17,9 +18,11 @@ import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.copy
 import com.angcyo.uiview.less.kotlin.nowTime
 import com.angcyo.uiview.less.kotlin.spiltTime
+import com.angcyo.uiview.less.kotlin.toJson
 import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
+import com.angcyo.uiview.less.utils.RDialog
 import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
@@ -31,6 +34,12 @@ class MainActivity : BaseAppCompatActivity() {
     companion object {
         const val UPDATE_BOTTOM_TIP = "update"
         const val UPDATE_TIME = "update_time"
+
+        //软件禁止使用
+        const val SOFT_ENABLE = "SOFT_ENABLE"
+
+        //本设备停止使用
+        const val SOFT_STOP = "SOFT_STOP"
         var activity: WeakReference<Activity>? = null
     }
 
@@ -55,6 +64,10 @@ class MainActivity : BaseAppCompatActivity() {
             if (BuildConfig.DEBUG) {
                 Hawk.put("baidu_ak", "vGcIcmO6OWnPcBBv9TzZryiD")
                 Hawk.put("baidu_sk", "Aa8lePlFQ8cp1py9GZUrrdkZGEyY2Tln")
+            }
+
+            if (!OCR.checkRun()) {
+                return@click
             }
 
             val ak = "${viewHolder.tv(R.id.baidu_ak_view).text.trim()}"
@@ -113,8 +126,12 @@ class MainActivity : BaseAppCompatActivity() {
                         )
                     } else if (action == UPDATE_TIME) {
                         updateTipTextView()
+                    } else if (action == SOFT_STOP) {
+                        RDialog.tip(this, "未授权的设备.")
+                    } else if (action == SOFT_ENABLE) {
+                        RDialog.tip(this, "软件已停止使用.")
                     }
-                }, UPDATE_BOTTOM_TIP, UPDATE_TIME
+                }, UPDATE_BOTTOM_TIP, UPDATE_TIME, SOFT_ENABLE, SOFT_STOP
             )
 
         viewHolder.click(R.id.test_button) {
@@ -154,36 +171,11 @@ class MainActivity : BaseAppCompatActivity() {
             T_.show("已复制")
         }
 
-        /*
-        *
-        * <action android:name="com.angcyo.alarm"/>
-                <action android:name="com.angcyo.ding.run"/>
-
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-
-                <action android:name="android.intent.action.CLOSE_SYSTEM_DIALOGS"/>
-
-                <action android:name="android.intent.action.SCREEN_ON"/>
-                <action android:name="android.intent.action.SCREEN_OFF"/>
-
-                <action android:name="android.intent.action.PACKAGE_ADDED"/>
-                <action android:name="android.intent.action.PACKAGE_REPLACED"/>
-                <action android:name="android.intent.action.PACKAGE_INSTALL"/>
-                <action android:name="android.intent.action.PACKAGE_REMOVED"/>
-
-                <action android:name="android.intent.action.CAMERA_BUTTON"/>
-                <action android:name="android.intent.action.CONFIGURATION_CHANGED"/>
-
-                <action android:name="android.intent.action.BATTERY_CHANGED"/>
-                <action android:name="android.intent.action.BATTERY_OKAY"/>
-                <action android:name="android.intent.action.BATTERY_LEVEL_CHANGED"/>
-                <action android:name="android.intent.action.BATTERY_LOW"/>
-
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
-        * */
         registerReceiver(TimeAlarmReceiver(), AlarmBroadcastReceiver.getIntentFilter().apply {
             addAction(TimeAlarmReceiver.RUN)
         })
+
+        OCR.loadConfig()
     }
 
     override fun onResume() {
@@ -196,6 +188,10 @@ class MainActivity : BaseAppCompatActivity() {
 
         val spiltTime = nowTime().spiltTime()
         L.i("今天周:${spiltTime[7]} 节假日:${OCR.isHoliday()}")
+
+        if (BuildConfig.DEBUG) {
+            L.i(Http.map("a:2", "b:3").toJson())
+        }
     }
 
     override fun onDestroy() {

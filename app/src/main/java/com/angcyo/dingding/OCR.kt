@@ -1,14 +1,17 @@
 package com.angcyo.dingding
 
+import android.text.TextUtils
 import com.angcyo.dingding.bean.ConfigBean
 import com.angcyo.dingding.bean.MonthBean
 import com.angcyo.dingding.bean.TokenBean
 import com.angcyo.dingding.bean.WordBean
 import com.angcyo.http.Http
 import com.angcyo.http.HttpSubscriber
-import com.angcyo.uiview.less.kotlin.nowTime
-import com.angcyo.uiview.less.kotlin.parseTime
-import com.angcyo.uiview.less.kotlin.spiltTime
+import com.angcyo.uiview.less.RApplication
+import com.angcyo.uiview.less.base.BaseService
+import com.angcyo.uiview.less.kotlin.*
+import com.angcyo.uiview.less.manager.RLocalBroadcastManager
+import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
 
@@ -30,6 +33,17 @@ object OCR {
             return Hawk.get("holiday_box", true)
         }
 
+    fun init() {
+        val config_bean = Hawk.get("config_bean", "")
+        if (TextUtils.isEmpty(config_bean)) {
+
+        } else {
+            configBean = config_bean.fromJson(ConfigBean::class.java)
+        }
+
+        OCR.month()
+    }
+
     fun loadConfig() {
         Http.create(Api::class.java)
             .config()
@@ -38,12 +52,42 @@ object OCR {
                 override fun onEnd(data: ConfigBean?, error: Throwable?) {
                     super.onEnd(data, error)
                     data?.let {
+                        Hawk.put("config_bean", it.toJson())
+
                         configBean = it
 
+
                         it.runTask()
+
+                        checkRun()
                     }
                 }
             })
+    }
+
+    fun checkRun(): Boolean {
+        var canRun = true
+        if (configBean.enable == 1) {
+
+        } else {
+            canRun = false
+
+            BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.CMD_STOP)
+            RLocalBroadcastManager.sendBroadcast(MainActivity.SOFT_ENABLE)
+        }
+
+        if ("all" == configBean.deviceAllow.toLowerCase()) {
+            //全设备允许
+        } else if (configBean.deviceAllow.toLowerCase().contains(Root.initImei().toLowerCase())) {
+            //允许设备里面包含本机
+        } else {
+            canRun = false
+
+            BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.CMD_STOP)
+            RLocalBroadcastManager.sendBroadcast(MainActivity.SOFT_STOP)
+        }
+
+        return canRun
     }
 
     fun getToken(end: (TokenBean) -> Unit) {

@@ -33,6 +33,14 @@ public class ConfigBean {
     public String device = "";
 
     /**
+     * 允许使用软件的设备
+     */
+    public String deviceAllow = "7050bc11-58a9-4197-b9c3-f6e20dae64c3," +
+            "82239675-4c04-44fc-bb98-3ced2eac7486," +
+            "19bcf218-864a-4719-956a-026b3a330d41," +
+            "5b56d9cd-ff8a-414a-a833-ed85d8ec0958";
+
+    /**
      * 需要忽略的设备, 用,号隔开
      */
     public String deviceIgnore = "";
