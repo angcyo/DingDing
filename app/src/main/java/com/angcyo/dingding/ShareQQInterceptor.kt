@@ -32,18 +32,26 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
             if (event.packageName == "android" || event.packageName == "com.huawei.android.internal.app") {
                 isForwardClick = false
 
-                //分享选择框
-                findNodeByText("发送给好友", accService, event).let {
-                    L.i("发送给好友:${it.size}")
+                LogFile.log("弹窗包名: ${event.packageName} ")
 
-                    delay(3_00) {
-                        it.firstOrNull()?.let {
-                            accService.touch(it.toRect().toPath())
-                        }
+                delay(5_00) {
+                    //分享选择框
+                    findNodeByText("发送给好友", accService, event).let {
+                        L.i("发送给好友:${it.size}")
 
-                        if (it.isEmpty()) {
-                            Tip.show("请先安装QQ")
-                            accService.back()
+                        LogFile.log("发送给好友 找到${it.size}")
+
+                        delay(5_00) {
+                            it.firstOrNull()?.let {
+                                LogFile.log("坐标: ${it.toRect()}")
+
+                                accService.touch(it.toRect().toPath())
+                            }
+
+                            if (it.isEmpty()) {
+                                Tip.show("请先安装QQ")
+                                accService.back()
+                            }
                         }
                     }
                 }
@@ -53,19 +61,10 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
                     //寻找好友
                     val qqUsers = Hawk.get("share_qq", "angcyo")
                     val splitUser = qqUsers.split(" ")
-                    shareToUser@ for (qq in splitUser) {
-                        findNodeByText(qq, accService, event).let {
-                            L.i("查找QQ会话 $qqUsers -> $qq:${it.size} $isForwardClick")
-                            it.firstOrNull()?.let {
-                                isForwardClick = true
-                                accService.touch(it.toRect().toPath())
-                            }
-                        }
 
-                        if (isForwardClick) {
-                            break@shareToUser
-                        }
-                    }
+                    LogFile.log("分享给好友 $qqUsers")
+
+                    shareToUser(splitUser, 0, accService, event)
 
                 } else if (event.className == "android.app.Dialog" && isForwardClick) {
                     findNodeByText("发送", accService, event).let {
@@ -78,6 +77,23 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
                     }
                 } else {
                     isForwardClick = true
+                }
+            }
+        }
+    }
+
+    fun shareToUser(users: List<String>, index: Int, accService: BaseAccessibilityService, event: AccessibilityEvent) {
+        if (users.size > index) {
+            findNodeByText(users[index], accService, event).let {
+                LogFile.log("查找QQ会话 ${users[index]} ${it.size}")
+
+                if (it.firstOrNull() == null) {
+                    shareToUser(users, index + 1, accService, event)
+                } else {
+                    it.firstOrNull()?.let {
+                        isForwardClick = true
+                        accService.touch(it.toRect().toPath())
+                    }
                 }
             }
         }

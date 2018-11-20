@@ -135,11 +135,35 @@ class DingDingService : BaseService() {
     }
 
     //上班打卡的定时任务
+    @Deprecated("广播不准, 用handler, 延时")
     var startPendingIntent: PendingIntent? = null
     //下班打卡的定时任务
+    @Deprecated("广播不准, 用handler, 延时")
     var endPendingIntent: PendingIntent? = null
 
+    private var startRunnable = Runnable {
+        sendBroadcast(
+            AlarmBroadcastReceiver.getIntent(
+                this,
+                TimeAlarmReceiver::class.java,
+                TimeAlarmReceiver.RUN
+            )
+        )
+    }
+
+    private var endRunnable = Runnable {
+        sendBroadcast(
+            AlarmBroadcastReceiver.getIntent(
+                this,
+                TimeAlarmReceiver::class.java,
+                TimeAlarmReceiver.RUN
+            )
+        )
+    }
+
     fun resetTime() {
+        LogFile.log("resetTime() 重置任务时间.")
+
         isTaskStart = true
 
         startTime = "08:${nextInt(20, 40)}:${nextInt(0, 59)}"
@@ -161,34 +185,69 @@ class DingDingService : BaseService() {
             RAlarmManager.cancel(this, it)
         }
 
-        if (OCR.isHoliday()) {
+        removeDelayThread(startRunnable)
+        removeDelayThread(endRunnable)
+
+        LogFile.log("设置在: $startTime  $endTime  节假日:${OCR.isHoliday()}")
+
+        if (OCR.isHoliday() && !debugRun) {
             //节假日
         } else {
             val timeSpan = calcTimeSpan()
 
-            startPendingIntent =
-                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
-            endPendingIntent =
-                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+//            startPendingIntent =
+//                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+//            endPendingIntent =
+//                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+//
+//            if (debugRun) {
+//                RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
+//            } else {
+//                val builder = StringBuilder()
+//                if (timeSpan[0] > 0) {
+//                    val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
+//                    builder.append("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
+//                    RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
+//                }
+//                if (timeSpan[1] < 0) {
+//                    //已经下班, 1秒后 更新打卡
+//                    RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
+//                } else {
+//                    val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
+//                    builder.append("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+//                    RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
+//
+//                    shareText(builder.toString())
+//                }
+//            }
 
             if (debugRun) {
-                RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
+                LogFile.log("3秒后, 测试运行打卡流程.")
+
+                postDelayThread(3_000, startRunnable)
             } else {
                 val builder = StringBuilder()
                 if (timeSpan[0] > 0) {
                     val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
                     builder.append("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
-                    RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
+
+                    postDelayThread(startTimeDelay, startRunnable)
+
+                    LogFile.log("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.")
                 }
                 if (timeSpan[1] < 0) {
                     //已经下班, 1秒后 更新打卡
-                    RAlarmManager.setDelay(this, 1_000, endPendingIntent!!)
+                    postDelayThread(1_000, endRunnable)
+
+                    LogFile.log("已经下班, 1秒后 更新打卡.")
                 } else {
                     val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
                     builder.append("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
-                    RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
+                    postDelayThread(endTimeDelay, endRunnable)
 
                     shareText(builder.toString())
+
+                    LogFile.log("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
                 }
             }
         }
@@ -478,6 +537,8 @@ class DingDingService : BaseService() {
         shareTextBuilder.toString().share(this)
 
         gotoMain(old)
+
+        LogFile.log("心跳:$heart")
     }
 
     fun shareText(text: String) {

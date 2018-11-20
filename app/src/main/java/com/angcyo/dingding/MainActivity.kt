@@ -17,6 +17,7 @@ import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.copy
 import com.angcyo.uiview.less.kotlin.nowTime
 import com.angcyo.uiview.less.kotlin.spiltTime
+import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.Root
@@ -152,6 +153,37 @@ class MainActivity : BaseAppCompatActivity() {
             Root.initImei().copy()
             T_.show("已复制")
         }
+
+        /*
+        *
+        * <action android:name="com.angcyo.alarm"/>
+                <action android:name="com.angcyo.ding.run"/>
+
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+
+                <action android:name="android.intent.action.CLOSE_SYSTEM_DIALOGS"/>
+
+                <action android:name="android.intent.action.SCREEN_ON"/>
+                <action android:name="android.intent.action.SCREEN_OFF"/>
+
+                <action android:name="android.intent.action.PACKAGE_ADDED"/>
+                <action android:name="android.intent.action.PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.PACKAGE_INSTALL"/>
+                <action android:name="android.intent.action.PACKAGE_REMOVED"/>
+
+                <action android:name="android.intent.action.CAMERA_BUTTON"/>
+                <action android:name="android.intent.action.CONFIGURATION_CHANGED"/>
+
+                <action android:name="android.intent.action.BATTERY_CHANGED"/>
+                <action android:name="android.intent.action.BATTERY_OKAY"/>
+                <action android:name="android.intent.action.BATTERY_LEVEL_CHANGED"/>
+                <action android:name="android.intent.action.BATTERY_LOW"/>
+
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+        * */
+        registerReceiver(TimeAlarmReceiver(), AlarmBroadcastReceiver.getIntentFilter().apply {
+            addAction(TimeAlarmReceiver.RUN)
+        })
     }
 
     override fun onResume() {
