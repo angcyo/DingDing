@@ -10,10 +10,7 @@ import android.view.accessibility.AccessibilityEvent
 import com.angcyo.dingding.bean.WordBean
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.accessibility.*
-import com.angcyo.uiview.less.kotlin.runMain
-import com.angcyo.uiview.less.kotlin.share
-import com.angcyo.uiview.less.kotlin.startApp
-import com.angcyo.uiview.less.kotlin.toBase64
+import com.angcyo.uiview.less.kotlin.*
 import com.angcyo.uiview.less.manager.Screenshot
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
@@ -69,6 +66,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     var filterEven = FilterEven(
         AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED, "android.widget.FrameLayout", 2000
     )
+
+    /*双击工作tab的时间*/
+    var lastDoubleTime = 0L
 
     init {
         filterPackageName = DING_DING
@@ -147,12 +147,19 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 findBottomRect(accService, findRectByText("工作", accService, event)).let {
                     L.i("工作:$it")
                     if (!it.isEmpty) {
-                        Tip.show("跳转工作Tab")
+                        val nowTime = nowTime()
 
-                        accService.double(it.toPath())
+                        if ((nowTime - lastDoubleTime) > 1_000) {
 
-                        delay(HTTP_DELAY) {
-                            jumpToDingCardActivity(accService)
+                            Tip.show("跳转工作Tab")
+
+                            accService.double(it.toPath())
+
+                            lastDoubleTime = nowTime
+
+                            delay(HTTP_DELAY) {
+                                jumpToDingCardActivity(accService)
+                            }
                         }
                     }
                 }
