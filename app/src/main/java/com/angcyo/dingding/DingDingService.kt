@@ -7,6 +7,7 @@ import android.os.Message
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.*
+import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RAlarmManager
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
@@ -164,13 +165,13 @@ class DingDingService : BaseService() {
 
         BaseService.start(this, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
 
-//        sendBroadcast(
-//            AlarmBroadcastReceiver.getIntent(
-//                this,
-//                TimeAlarmReceiver::class.java,
-//                TimeAlarmReceiver.RUN
-//            )
-//        )
+        sendBroadcast(
+            AlarmBroadcastReceiver.getIntent(
+                this,
+                TimeAlarmReceiver::class.java,
+                TimeAlarmReceiver.RUN
+            )
+        )
     }
 
     private var endRunnable = Runnable {
@@ -178,13 +179,13 @@ class DingDingService : BaseService() {
 
         BaseService.start(this, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
 
-//        sendBroadcast(
-//            AlarmBroadcastReceiver.getIntent(
-//                this,
-//                TimeAlarmReceiver::class.java,
-//                TimeAlarmReceiver.RUN
-//            )
-//        )
+        sendBroadcast(
+            AlarmBroadcastReceiver.getIntent(
+                this,
+                TimeAlarmReceiver::class.java,
+                TimeAlarmReceiver.RUN
+            )
+        )
     }
 
     fun resetTime() {
@@ -231,10 +232,10 @@ class DingDingService : BaseService() {
         } else {
             val timeSpan = calcTimeSpan()
 
-//            startPendingIntent =
-//                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
-//            endPendingIntent =
-//                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+            startPendingIntent =
+                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
+            endPendingIntent =
+                    AlarmBroadcastReceiver.getPendingIntent(this, TimeAlarmReceiver::class.java, TimeAlarmReceiver.RUN)
 //
 //            if (debugRun) {
 //                RAlarmManager.setDelay(this, 3_000, endPendingIntent!!)
@@ -267,6 +268,7 @@ class DingDingService : BaseService() {
                     val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
                     builder.append("上班任务($startTime)定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
 
+                    RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
                     postDelayThread(startTimeDelay, startRunnable)
 
                     LogFile.log("上班任务($startTime)定时在 ${RUtils.formatTime(startTimeDelay)} 后.")
@@ -279,6 +281,8 @@ class DingDingService : BaseService() {
                 } else {
                     val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
                     builder.append("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+
+                    RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
                     postDelayThread(endTimeDelay, endRunnable)
 
                     shareText(builder.toString())
