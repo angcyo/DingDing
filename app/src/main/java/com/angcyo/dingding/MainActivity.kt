@@ -53,7 +53,7 @@ class MainActivity : BaseAppCompatActivity() {
 
         viewHolder.exV(R.id.ding_user_view).setInputText(Hawk.get("ding_user", ""))
         viewHolder.exV(R.id.ding_pw_view).setInputText(Hawk.get("ding_pw", ""))
-        viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "默认电脑"))
+        viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "我的电脑"))
         viewHolder.exV(R.id.baidu_ak_view).setInputText(Hawk.get("baidu_ak", ""))
         viewHolder.exV(R.id.baidu_sk_view).setInputText(Hawk.get("baidu_sk", ""))
         updateDelayTime()
@@ -168,7 +168,7 @@ class MainActivity : BaseAppCompatActivity() {
         viewHolder.tv(R.id.uuid_text_view).text = Root.initImei()
         viewHolder.click(R.id.uuid_text_view) {
             Root.initImei().copy()
-            T_.show("已复制")
+            T_.show("UUID 已复制" + BuildConfig.FLAVOR)
         }
 
         registerReceiver(TimeAlarmReceiver(), AlarmBroadcastReceiver.getIntentFilter().apply {

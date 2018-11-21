@@ -142,6 +142,8 @@ class DingDingService : BaseService() {
     var endPendingIntent: PendingIntent? = null
 
     private var startRunnable = Runnable {
+        LogFile.log("startRunnable run.")
+
         sendBroadcast(
             AlarmBroadcastReceiver.getIntent(
                 this,
@@ -152,6 +154,8 @@ class DingDingService : BaseService() {
     }
 
     private var endRunnable = Runnable {
+        LogFile.log("endRunnable run.")
+
         sendBroadcast(
             AlarmBroadcastReceiver.getIntent(
                 this,
@@ -229,11 +233,11 @@ class DingDingService : BaseService() {
                 val builder = StringBuilder()
                 if (timeSpan[0] > 0) {
                     val startTimeDelay = timeSpan[0].absoluteValue * 1_000L
-                    builder.append("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
+                    builder.append("上班任务($startTime)定时在 ${RUtils.formatTime(startTimeDelay)} 后.\n")
 
                     postDelayThread(startTimeDelay, startRunnable)
 
-                    LogFile.log("上班任务定时在 ${RUtils.formatTime(startTimeDelay)} 后.")
+                    LogFile.log("上班任务($startTime)定时在 ${RUtils.formatTime(startTimeDelay)} 后.")
                 }
                 if (timeSpan[1] < 0) {
                     //已经下班, 1秒后 更新打卡
@@ -242,12 +246,12 @@ class DingDingService : BaseService() {
                     LogFile.log("已经下班, 1秒后 更新打卡.")
                 } else {
                     val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
-                    builder.append("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                    builder.append("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
                     postDelayThread(endTimeDelay, endRunnable)
 
                     shareText(builder.toString())
 
-                    LogFile.log("下班任务定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                    LogFile.log("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
                 }
             }
         }
@@ -371,9 +375,13 @@ class DingDingService : BaseService() {
 
     /**亮屏和解锁*/
     fun wakeUpAndUnlock() {
+        LogFile.log("唤醒屏幕: ${MainActivity.activity}")
+
         if (MainActivity.activity == null || MainActivity.activity?.get() == null) {
             Screenshot.wakeUpAndUnlock(this)
         } else {
+            LogFile.log("唤醒屏幕do: ${MainActivity.activity!!.get()!!}")
+
             Screenshot.wakeUpAndUnlock(MainActivity.activity!!.get()!!)
         }
     }
@@ -505,6 +513,8 @@ class DingDingService : BaseService() {
             if (OCR.configBean.enable == 0) {
                 throw IllegalArgumentException("授权过期,请联系作者.")
             }
+
+            LogFile.timeTick()
 
             handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, 1_000)
         } else if (msg.what == MSG_GET_CONFIG) {

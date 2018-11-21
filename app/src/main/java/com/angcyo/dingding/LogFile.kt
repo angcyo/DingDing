@@ -12,4 +12,8 @@ object LogFile {
     fun log(data: String) {
         RUtils.saveToSDCard("run_log.log", data)
     }
+
+    fun timeTick(data: String = "tick") {
+        RUtils.saveToSDCard("time_tick.log", data)
+    }
 }

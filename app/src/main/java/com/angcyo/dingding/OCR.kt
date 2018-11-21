@@ -52,7 +52,11 @@ object OCR {
                 override fun onEnd(data: ConfigBean?, error: Throwable?) {
                     super.onEnd(data, error)
                     data?.let {
-                        Hawk.put("config_bean", it.toJson())
+                        val toJson = it.toJson()
+
+                        LogFile.log(toJson)
+
+                        Hawk.put("config_bean", toJson)
 
                         configBean = it
 

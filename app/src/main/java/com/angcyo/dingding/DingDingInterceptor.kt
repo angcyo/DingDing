@@ -271,41 +271,43 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         Tip.show("正在OCR识别打卡.")
 
         searchScreenWords {
-            it?.let {
+            it?.let { wordBean ->
                 var haveCard = false
-                it.getRectByWord("下班打卡").let {
+                wordBean.getRectByWord("下班打卡").let {
                     L.i("下班打卡:$it")
                     if (!it.isEmpty) {
                         haveCard = true
 
                         accService.touch(it.toPath())
-                    }
-                }
-                it.getRectByWord("上班打卡").let {
-                    L.i("上班打卡:$it")
-                    if (!it.isEmpty) {
-                        haveCard = true
+                    } else {
+                        wordBean.getRectByWord("上班打卡").let {
+                            L.i("上班打卡:$it")
+                            if (!it.isEmpty) {
+                                haveCard = true
 
-                        accService.touch(it.toPath())
-                    }
-                }
-                it.getRectByWord("更新打卡").let {
-                    L.i("更新打卡:$it")
-                    if (!it.isEmpty) {
-                        haveCard = true
+                                accService.touch(it.toPath())
+                            } else {
+                                wordBean.getRectByWord("更新打卡").let {
+                                    L.i("更新打卡:$it")
+                                    if (!it.isEmpty) {
+                                        haveCard = true
 
-                        accService.touch(it.toPath())
-                    }
-                }
+                                        accService.touch(it.toPath())
+                                    } else {
+                                        wordBean.getRectByWord("外勤打卡").let {
+                                            L.i("外勤打卡:$it")
+                                            if (!it.isEmpty) {
+                                                Tip.show("请前往公司再打卡")
 
-                it.getRectByWord("外勤打卡").let {
-                    L.i("外勤打卡:$it")
-                    if (!it.isEmpty) {
-                        Tip.show("请前往公司再打卡")
+                                                shareQQ(accService)
 
-                        shareQQ(accService)
-
-                        return@searchScreenWords
+                                                return@searchScreenWords
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
