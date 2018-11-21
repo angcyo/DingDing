@@ -342,7 +342,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         }
     }
 
-    fun checkCardReult(accService: BaseAccessibilityService, isInCardUI: Boolean = true /*是否是打卡界面*/) {
+    fun checkCardReult(accService: BaseAccessibilityService, isInCardUI: Boolean = true /*是否是打卡界面*/, retry: Int = 3) {
         delay(HTTP_DELAY) {
             searchScreenWords {
                 it?.let { wordBean ->
@@ -478,10 +478,16 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         }
                     }
 
-                    if (isInCardUI) {
-                        Tip.show("弹出了什么鬼?")
+                    if (retry <= 0) {
+                        if (isInCardUI) {
+                            Tip.show("弹出了什么鬼?")
+                        } else {
+                            Tip.show("OCR未识别.")
+                        }
                     } else {
-                        Tip.show("OCR未识别.")
+                        Tip.show("重试$retry 结果识别")
+
+                        checkCardReult(accService, isInCardUI, retry - 1)
                     }
                 }
             }

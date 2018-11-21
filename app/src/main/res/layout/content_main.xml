@@ -30,6 +30,62 @@
                       style="@style/BaseDarkTextStyle"
                       android:id="@+id/tip_text_view"/>
 
+            <!--默认上下班时间-->
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_height="wrap_content">
+
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content">
+
+                    <com.angcyo.uiview.less.widget.ExEditText
+                            android:id="@+id/edit_start_time"
+                            android:layout_width="match_parent"
+                            style="@style/BaseDarkTextStyle"
+                            android:hint="正常上班时间"
+                            android:maxLength="11"
+                            android:text="08:45:00"
+                            android:layout_height="wrap_content"/>
+
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content">
+
+                    <com.angcyo.uiview.less.widget.ExEditText
+                            android:id="@+id/edit_end_time"
+                            android:hint="正常下班时间"
+                            android:text="18:01:10"
+                            android:layout_width="match_parent"
+                            style="@style/BaseDarkTextStyle"
+                            android:layout_height="wrap_content"/>
+
+                </android.support.design.widget.TextInputLayout>
+
+                <android.support.design.widget.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
+                        android:layout_height="wrap_content">
+
+                    <com.angcyo.uiview.less.widget.ExEditText
+                            android:id="@+id/edit_random_time"
+                            android:hint="随机打卡时间(分)"
+                            android:maxLength="2"
+                            android:text="30"
+                            android:layout_width="match_parent"
+                            style="@style/BaseDarkTextStyle"
+                            android:layout_height="wrap_content"/>
+
+                </android.support.design.widget.TextInputLayout>
+
+            </LinearLayout>
+
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"

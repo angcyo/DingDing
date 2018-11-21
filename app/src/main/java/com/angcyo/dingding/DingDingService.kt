@@ -7,7 +7,6 @@ import android.os.Message
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.*
-import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RAlarmManager
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
@@ -15,6 +14,7 @@ import com.angcyo.uiview.less.utils.RUtils
 import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.utilcode.utils.ConstUtils
 import com.angcyo.uiview.less.utils.utilcode.utils.TimeUtils
+import com.orhanobut.hawk.Hawk
 import kotlin.math.absoluteValue
 
 /**
@@ -42,14 +42,31 @@ class DingDingService : BaseService() {
         @Deprecated("使用定时器控制")
         var run = false
 
+        const val DEFAULT_PATTERN = "HH:mm"
+
         //默认上下班时间
-        var defaultStartTime: String = "08:45:00"
-        var defaultEndTime: String = "18:01:10"
+        var defaultStartTime: String
+            get() = Hawk.get("defaultStartTime", "08:45")
+            set(value) {
+                Hawk.put("defaultStartTime", value)
+            }
+
+        var defaultEndTime: String
+            get() = Hawk.get("defaultEndTime", "18:01")
+            set(value) {
+                Hawk.put("defaultEndTime", value)
+            }
+
+        var defaultDelayTime: String
+            get() = Hawk.get("defaultDelayTime", "30")
+            set(value) {
+                Hawk.put("defaultDelayTime", value)
+            }
 
         /**随机产生上下班时间*/
         //上下班时间
-        var startTime: String = "08:30:18"
-        var endTime: String = "18:10:10"
+        var startTime: String = "08:30"
+        var endTime: String = "18:10"
 
         //是否触发了上班打卡
         var isStartTimeDo = false
@@ -144,25 +161,29 @@ class DingDingService : BaseService() {
     private var startRunnable = Runnable {
         LogFile.log("startRunnable run.")
 
-        sendBroadcast(
-            AlarmBroadcastReceiver.getIntent(
-                this,
-                TimeAlarmReceiver::class.java,
-                TimeAlarmReceiver.RUN
-            )
-        )
+        BaseService.start(this, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
+
+//        sendBroadcast(
+//            AlarmBroadcastReceiver.getIntent(
+//                this,
+//                TimeAlarmReceiver::class.java,
+//                TimeAlarmReceiver.RUN
+//            )
+//        )
     }
 
     private var endRunnable = Runnable {
         LogFile.log("endRunnable run.")
 
-        sendBroadcast(
-            AlarmBroadcastReceiver.getIntent(
-                this,
-                TimeAlarmReceiver::class.java,
-                TimeAlarmReceiver.RUN
-            )
-        )
+        BaseService.start(this, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
+
+//        sendBroadcast(
+//            AlarmBroadcastReceiver.getIntent(
+//                this,
+//                TimeAlarmReceiver::class.java,
+//                TimeAlarmReceiver.RUN
+//            )
+//        )
     }
 
     fun resetTime() {
@@ -170,8 +191,18 @@ class DingDingService : BaseService() {
 
         isTaskStart = true
 
-        startTime = "08:${nextInt(20, 40)}:${nextInt(0, 59)}"
-        endTime = "18:${nextInt(0, 30)}:${nextInt(0, 59)}"
+        val delayMillis = defaultDelayTime.toInt() * 60 * 1000L
+        val delayStart = nextInt(defaultDelayTime.toInt()) * 60 * 1000L
+        val delayEnd = nextInt(defaultDelayTime.toInt()) * 60 * 1000L
+
+        startTime = (defaultStartTime.toMillis(DEFAULT_PATTERN) - delayMillis + delayStart)
+            .toTime("HH:mm:ss")
+        endTime = (defaultEndTime.toMillis(DEFAULT_PATTERN) + delayMillis - delayEnd)
+            .toTime("HH:mm:ss")
+
+        //startTime = "08:${nextInt(20, 40)}:${nextInt(0, 59)}"
+        //endTime = "18:${nextInt(0, 30)}:${nextInt(0, 59)}"
+
         isStartTimeDo = false
         isEndTimeDo = false
         val spiltTime = nowTime().spiltTime()
@@ -330,28 +361,28 @@ class DingDingService : BaseService() {
             notTimeString,
             defaultStartTime,
             ConstUtils.TimeUnit.SEC,
-            "HH:mm:ss"
+            DEFAULT_PATTERN
         )
 
         val defaultEndSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
             defaultEndTime,
             ConstUtils.TimeUnit.SEC,
-            "HH:mm:ss"
+            DEFAULT_PATTERN
         )
 
         val startSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
             startTime,
             ConstUtils.TimeUnit.SEC,
-            "HH:mm:ss"
+            DEFAULT_PATTERN
         )
 
         val endSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
             endTime,
             ConstUtils.TimeUnit.SEC,
-            "HH:mm:ss"
+            DEFAULT_PATTERN
         )
 
         //负数表示已经上班, 正数表示距离上班的时间差
@@ -432,14 +463,14 @@ class DingDingService : BaseService() {
                     "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
                     defaultStartTime,
                     ConstUtils.TimeUnit.SEC,
-                    "HH:mm:ss"
+                    DEFAULT_PATTERN
                 )
 
                 val defaultEndSpan = TimeUtils.getTimeSpanNoAbs(
                     "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
                     defaultEndTime,
                     ConstUtils.TimeUnit.SEC,
-                    "HH:mm:ss"
+                    DEFAULT_PATTERN
                 )
 
                 if (defaultStartSpan > 0 && !debugRun) {
@@ -453,7 +484,7 @@ class DingDingService : BaseService() {
                             "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
                             startTime,
                             ConstUtils.TimeUnit.SEC,
-                            "HH:mm:ss"
+                            DEFAULT_PATTERN
                         )
 
                         val msg = "距离上班$startTime 还差:${startSpan.absoluteValue} 秒"
@@ -485,7 +516,7 @@ class DingDingService : BaseService() {
                             "${spiltTime[3]}:${spiltTime[4]}:${spiltTime[5]}",
                             endTime,
                             ConstUtils.TimeUnit.SEC,
-                            "HH:mm:ss"
+                            DEFAULT_PATTERN
                         )
 
                         val msg = "距离下班$endTime 还差:${endSpan.absoluteValue} 秒"
@@ -549,6 +580,7 @@ class DingDingService : BaseService() {
         gotoMain(old)
 
         LogFile.log("心跳:$heart")
+        LogFile.log("上班 $startTime  下班 $endTime")
     }
 
     fun shareText(text: String) {
@@ -581,5 +613,10 @@ class DingDingService : BaseService() {
             runMain()
             DingDingInterceptor.handEvent = oldHandEvent
         }, 5_000)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        LogFile.log("打卡服务:onDestroy")
     }
 }

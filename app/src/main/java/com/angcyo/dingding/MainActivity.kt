@@ -25,8 +25,10 @@ import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.RDialog
 import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
+import com.angcyo.uiview.less.widget.CharInputFilter
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
+import java.text.SimpleDateFormat
 
 
 class MainActivity : BaseAppCompatActivity() {
@@ -67,6 +69,7 @@ class MainActivity : BaseAppCompatActivity() {
             }
 
             if (!OCR.checkRun()) {
+                OCR.loadConfig()
                 return@click
             }
 
@@ -94,6 +97,13 @@ class MainActivity : BaseAppCompatActivity() {
                 )
 
                 updateDelayTime()
+                configTime(true)
+
+                currentFocus?.clearFocus()
+
+//                if (BuildConfig.DEBUG) {
+//                    return@click
+//                }
 
                 DingDingInterceptor.handEvent = true
 
@@ -135,6 +145,8 @@ class MainActivity : BaseAppCompatActivity() {
             )
 
         viewHolder.click(R.id.test_button) {
+            currentFocus?.clearFocus()
+
             T_.show("请锁屏.")
             viewHolder.postDelay(5_000) {
                 Screenshot.wakeUpAndUnlock(this)
@@ -151,6 +163,8 @@ class MainActivity : BaseAppCompatActivity() {
         }
 
         viewHolder.click(R.id.test_share_button) {
+            currentFocus?.clearFocus()
+
             BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.TASK_SHARE_TEST)
         }
 
@@ -175,12 +189,13 @@ class MainActivity : BaseAppCompatActivity() {
             addAction(TimeAlarmReceiver.RUN)
         })
 
+        configTime()
+
         OCR.loadConfig()
     }
 
     override fun onResume() {
         super.onResume()
-        ignoreBatteryOptimization()
 
         updateTipTextView()
 
@@ -192,6 +207,12 @@ class MainActivity : BaseAppCompatActivity() {
         if (BuildConfig.DEBUG) {
             L.i(Http.map("a:2", "b:3").toJson())
         }
+    }
+
+    override fun onPostCreate(savedInstanceState: Bundle?) {
+        super.onPostCreate(savedInstanceState)
+
+        ignoreBatteryOptimization()
     }
 
     override fun onDestroy() {
@@ -226,6 +247,7 @@ class MainActivity : BaseAppCompatActivity() {
 
         builder.append("\n请将程序添加到`电池优化`白名单.")
         builder.append("\n请取消程序的后台配置限制(如果有)")
+        builder.append("\n请取消锁屏密码,可以自动亮屏并解锁(如果满足)")
 
         viewHolder.tv(R.id.tip_text_view).text = builder
     }
@@ -256,5 +278,67 @@ class MainActivity : BaseAppCompatActivity() {
     override fun onBackPressed() {
         moveTaskToBack(true)
         //super.onBackPressed()
+    }
+
+    //上下班时间
+    fun configTime(save: Boolean = false) {
+        if (save) {
+            val startTime = viewHolder.tv(R.id.edit_start_time).text
+            val endTime = viewHolder.tv(R.id.edit_end_time).text
+            val delayTime = viewHolder.tv(R.id.edit_random_time).text
+
+            val df = SimpleDateFormat(DingDingService.DEFAULT_PATTERN)
+            if (TextUtils.isEmpty(startTime)) {
+            } else {
+                try {
+                    df.parse("$startTime")
+                    DingDingService.defaultStartTime = "$startTime"
+                } catch (e: Exception) {
+                }
+            }
+            if (TextUtils.isEmpty(endTime)) {
+            } else {
+                try {
+                    df.parse("$endTime")
+                    DingDingService.defaultEndTime = "$endTime"
+                } catch (e: Exception) {
+                }
+            }
+            if (TextUtils.isEmpty(delayTime)) {
+            } else {
+                if (delayTime.toString().toInt() < 4) {
+                    DingDingService.defaultDelayTime = "4"
+                } else {
+                    DingDingService.defaultDelayTime = "$delayTime"
+                }
+            }
+
+            configTime()
+        } else {
+            viewHolder.exV(R.id.edit_start_time).setInputText(DingDingService.defaultStartTime)
+            viewHolder.exV(R.id.edit_end_time).setInputText(DingDingService.defaultEndTime)
+            viewHolder.exV(R.id.edit_random_time).setInputText(DingDingService.defaultDelayTime)
+
+            viewHolder.exV(R.id.edit_start_time).setFilter(CharInputFilter().apply {
+                setFilterModel(CharInputFilter.MODEL_NUMBER)
+                setMaxInputLength(5)
+                addFilterCallback { _, c, _, _, _, _ ->
+                    c == ':'
+                }
+            })
+
+            viewHolder.exV(R.id.edit_end_time).setFilter(CharInputFilter().apply {
+                setFilterModel(CharInputFilter.MODEL_NUMBER)
+                setMaxInputLength(5)
+                addFilterCallback { _, c, _, _, _, _ ->
+                    c == ':'
+                }
+            })
+
+            viewHolder.exV(R.id.edit_random_time).setFilter(CharInputFilter().apply {
+                setFilterModel(CharInputFilter.MODEL_NUMBER)
+                setMaxInputLength(2)
+            })
+        }
     }
 }

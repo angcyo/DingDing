@@ -23,7 +23,9 @@ class TimeAlarmReceiver : AlarmBroadcastReceiver() {
             Tip.show("定时:开始打卡")
             BaseService.start(context, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
         } else if (Intent.ACTION_SCREEN_OFF.equals(action, ignoreCase = true)) {
-            context.runMain()
+            if (DingDingService.isTaskStart) {
+                context.runMain()
+            }
         }
     }
 }
