@@ -15,10 +15,7 @@ import com.angcyo.uiview.less.RApplication
 import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
 import com.angcyo.uiview.less.base.BaseService
-import com.angcyo.uiview.less.kotlin.copy
-import com.angcyo.uiview.less.kotlin.nowTime
-import com.angcyo.uiview.less.kotlin.spiltTime
-import com.angcyo.uiview.less.kotlin.toJson
+import com.angcyo.uiview.less.kotlin.*
 import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
@@ -83,6 +80,9 @@ class MainActivity : BaseAppCompatActivity() {
             if (DingDingService.isTaskStart) {
                 //停止挂机
                 BaseService.start(this, DingDingService::class.java, DingDingService.CMD_STOP)
+
+                viewHolder.enable(R.id.test_button, true)
+                viewHolder.enable(R.id.test_share_button, true)
             } else {
                 //开始挂机
                 Hawk.put("ding_user", "${viewHolder.tv(R.id.ding_user_view).text}")
@@ -148,8 +148,12 @@ class MainActivity : BaseAppCompatActivity() {
             currentFocus?.clearFocus()
 
             T_.show("请锁屏.")
-            viewHolder.postDelay(5_000) {
+            viewHolder.postDelay(if (BuildConfig.DEBUG) 10 * 60_000L else 5_000L) {
+                L.w("开始唤醒屏幕")
+
                 Screenshot.wakeUpAndUnlock(this)
+                DingDingInterceptor.DING_DING.startApp(this)
+
 //                viewHolder.post {
 //                    DingDingInterceptor.DING_DING.startApp(this)
 //                }
@@ -260,11 +264,7 @@ class MainActivity : BaseAppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode != -1) {
-            DingDingService.isTaskStart = false
-            updateTipTextView()
-        }
-        screenshot?.onActivityResult(resultCode, data) {
+        val mediaProjection = screenshot?.onActivityResult(resultCode, data) {
             DingDingInterceptor.handEvent = false
 
             DingDingService.isTaskStart = !DingDingService.isTaskStart
@@ -272,6 +272,14 @@ class MainActivity : BaseAppCompatActivity() {
             updateTipTextView()
 
             BaseService.start(this, DingDingService::class.java, DingDingService.CMD_RESET_TIME)
+        }
+
+        if (mediaProjection != null) {
+            DingDingService.isTaskStart = false
+            updateTipTextView()
+
+            viewHolder.enable(R.id.test_button, false)
+            viewHolder.enable(R.id.test_share_button, false)
         }
     }
 
