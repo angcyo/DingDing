@@ -43,6 +43,7 @@ class DingDingService : BaseService() {
         var run = false
 
         const val DEFAULT_PATTERN = "HH:mm"
+        const val DEFAULT_PATTERN_CALC_SPAN = "HH:mm:ss"
 
         //默认上下班时间
         var defaultStartTime: String
@@ -359,30 +360,30 @@ class DingDingService : BaseService() {
 
         val defaultStartSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
-            defaultStartTime,
+            defaultStartTime.toMillis(DEFAULT_PATTERN).toTime(DEFAULT_PATTERN_CALC_SPAN),
             ConstUtils.TimeUnit.SEC,
-            DEFAULT_PATTERN
+            DEFAULT_PATTERN_CALC_SPAN
         )
 
         val defaultEndSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
-            defaultEndTime,
+            defaultEndTime.toMillis(DEFAULT_PATTERN).toTime(DEFAULT_PATTERN_CALC_SPAN),
             ConstUtils.TimeUnit.SEC,
-            DEFAULT_PATTERN
+            DEFAULT_PATTERN_CALC_SPAN
         )
 
         val startSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
             startTime,
             ConstUtils.TimeUnit.SEC,
-            DEFAULT_PATTERN
+            DEFAULT_PATTERN_CALC_SPAN
         )
 
         val endSpan = TimeUtils.getTimeSpanNoAbs(
             notTimeString,
             endTime,
             ConstUtils.TimeUnit.SEC,
-            DEFAULT_PATTERN
+            DEFAULT_PATTERN_CALC_SPAN
         )
 
         //负数表示已经上班, 正数表示距离上班的时间差
@@ -405,23 +406,23 @@ class DingDingService : BaseService() {
     }
 
     /**亮屏和解锁*/
-    fun wakeUpAndUnlock() {
+    fun wakeUpAndUnlock(succeededAction: Runnable) {
         LogFile.log("唤醒屏幕: ${MainActivity.activity}")
 
         if (MainActivity.activity == null || MainActivity.activity?.get() == null) {
-            Screenshot.wakeUpAndUnlock(this)
+            Screenshot.wakeUpAndUnlock(this, true, succeededAction)
         } else {
             LogFile.log("唤醒屏幕do: ${MainActivity.activity!!.get()!!}")
 
-            Screenshot.wakeUpAndUnlock(MainActivity.activity!!.get()!!)
+            Screenshot.wakeUpAndUnlock(MainActivity.activity!!.get()!!, true, succeededAction)
         }
     }
 
     fun toDingDing() {
-        wakeUpAndUnlock()
-
-        DingDingInterceptor.handEvent = true
-        RUtils.startApp(this, DingDingInterceptor.DING_DING)
+        wakeUpAndUnlock(Runnable {
+            DingDingInterceptor.handEvent = true
+            RUtils.startApp(this, DingDingInterceptor.DING_DING)
+        })
     }
 
     override fun onHandleMessage(msg: Message): Boolean {
@@ -559,53 +560,54 @@ class DingDingService : BaseService() {
     fun shareTime(heart: Boolean = false) {
         L.i("分享心跳")
 
-        wakeUpAndUnlock()
+        wakeUpAndUnlock(Runnable {
+            val spiltTime = nowTime().spiltTime()
 
-        val spiltTime = nowTime().spiltTime()
+            val shareTextBuilder = StringBuilder()
+            shareTextBuilder.append("来自`${RUtils.getAppName(this)}`的提醒:")
+            shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
+            shareTextBuilder.append("\n上班 $startTime")
+            shareTextBuilder.append("\n下班 $endTime")
 
-        val shareTextBuilder = StringBuilder()
-        shareTextBuilder.append("来自`${RUtils.getAppName(this)}`的提醒:")
-        shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
-        shareTextBuilder.append("\n上班 $startTime")
-        shareTextBuilder.append("\n下班 $endTime")
+            if (heart) {
+                shareTextBuilder.append("\n助手还活着请放心.")
+            }
 
-        if (heart) {
-            shareTextBuilder.append("\n助手还活着请放心.")
-        }
+            val old = DingDingInterceptor.handEvent
+            DingDingInterceptor.handEvent = true
+            shareTextBuilder.toString().share(this)
 
-        val old = DingDingInterceptor.handEvent
-        DingDingInterceptor.handEvent = true
-        shareTextBuilder.toString().share(this)
+            gotoMain(old)
 
-        gotoMain(old)
-
-        LogFile.log("心跳:$heart")
-        LogFile.log("上班 $startTime  下班 $endTime")
+            LogFile.log("心跳:$heart")
+            LogFile.log("上班 $startTime  下班 $endTime")
+        })
     }
 
     fun shareText(text: String) {
         L.i("分享文本")
-        wakeUpAndUnlock()
-
-        val old = DingDingInterceptor.handEvent
-        DingDingInterceptor.handEvent = true
-        text.share(this)
-
-        gotoMain(old)
-    }
-
-    fun shareScreenshot() {
-        wakeUpAndUnlock()
-
-        DingDingInterceptor.capture {
+        wakeUpAndUnlock(Runnable {
 
             val old = DingDingInterceptor.handEvent
             DingDingInterceptor.handEvent = true
-
-            it.share(this)
+            text.share(this)
 
             gotoMain(old)
-        }
+        })
+    }
+
+    fun shareScreenshot() {
+        wakeUpAndUnlock(Runnable {
+            DingDingInterceptor.capture {
+
+                val old = DingDingInterceptor.handEvent
+                DingDingInterceptor.handEvent = true
+
+                it.share(this)
+
+                gotoMain(old)
+            }
+        })
     }
 
     private fun gotoMain(oldHandEvent: Boolean) {

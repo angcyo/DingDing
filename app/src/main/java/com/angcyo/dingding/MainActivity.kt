@@ -147,16 +147,23 @@ class MainActivity : BaseAppCompatActivity() {
         viewHolder.click(R.id.test_button) {
             currentFocus?.clearFocus()
 
+            L.w("开始测试唤醒")
             T_.show("请锁屏.")
-            viewHolder.postDelay(if (BuildConfig.DEBUG) 10 * 60_000L else 5_000L) {
+            val runnable = Runnable {
+                L.w("开始唤醒屏幕  do...")
+
+                Screenshot.wakeUpAndUnlock(this, true) {
+                    DingDingInterceptor.DING_DING.startApp(this)
+
+                    viewHolder.postDelay(3 * 1000L) {
+                        runMain()
+                    }
+                }
+            }
+
+            viewHolder.postDelay(if (BuildConfig.DEBUG) 10 * 1_000L else 5_000L) {
                 L.w("开始唤醒屏幕")
-
-                Screenshot.wakeUpAndUnlock(this)
-                DingDingInterceptor.DING_DING.startApp(this)
-
-//                viewHolder.post {
-//                    DingDingInterceptor.DING_DING.startApp(this)
-//                }
+                viewHolder.post(runnable)
             }
 //            RAlarmManager.setDelay(
 //                this,
@@ -179,7 +186,7 @@ class MainActivity : BaseAppCompatActivity() {
                 //RUtils.saveView(viewHolder.itemView).share(this)
                 //"分享文本测试".share(this)
 
-                Screenshot.wakeUpAndUnlock(this, false)
+                //Screenshot.wakeUpAndUnlock(this, false)
             }
         }
 
@@ -208,9 +215,9 @@ class MainActivity : BaseAppCompatActivity() {
         val spiltTime = nowTime().spiltTime()
         L.i("今天周:${spiltTime[7]} 节假日:${OCR.isHoliday()}")
 
-        if (BuildConfig.DEBUG) {
-            L.i(Http.map("a:2", "b:3").toJson())
-        }
+//        if (BuildConfig.DEBUG) {
+//            L.i(Http.map("a:2", "b:3").toJson())
+//        }
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -295,7 +302,7 @@ class MainActivity : BaseAppCompatActivity() {
             val endTime = viewHolder.tv(R.id.edit_end_time).text
             val delayTime = viewHolder.tv(R.id.edit_random_time).text
 
-            val df = SimpleDateFormat(DingDingService.DEFAULT_PATTERN)
+            val df = SimpleDateFormat("HH:mm")
             if (TextUtils.isEmpty(startTime)) {
             } else {
                 try {
