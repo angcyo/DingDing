@@ -97,6 +97,8 @@ class DingDingService : BaseService() {
         /**Github 数据缓存 有3分钟, 每2分钟检查一次*/
         const val CHECK_TASK_DELAY = 120_000L
         var CHECK_TIME_DELAY = if (BuildConfig.DEBUG) 10_000L else 1_000L
+
+        var lastHitTime = 0L
     }
 
     override fun onCreate() {
@@ -498,11 +500,17 @@ class DingDingService : BaseService() {
             if (spiltTime[3] in (startTimeLong[3] - 1..startTimeLong[3]) ||
                 spiltTime[3] in (endTimeLong[3] - 1..endTimeLong[3])
             ) {
-                //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
-                updateBroadcast()
-                //shareTime(true)
-                Tip.show("Ready 请保持屏幕常亮.")
+                val nowTime = nowTime()
+                if (nowTime - lastHitTime >= 30 * 60 * 1000L) {
+                    //30分钟通知一次
 
+                    //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
+                    updateBroadcast()
+                    //shareTime(true)
+                    Tip.show("Ready 请保持屏幕常亮.")
+
+                    lastHitTime = nowTime
+                }
                 //gotoMain(DingDingInterceptor.handEvent)
             }
 
