@@ -194,35 +194,38 @@
 
             </android.support.design.widget.TextInputLayout>
 
-            <FrameLayout android:layout_width="match_parent"
-                         android:layout_height="wrap_content">
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_height="wrap_content">
 
                 <android.support.v7.widget.SwitchCompat
                         android:id="@+id/close_float_box"
                         android:text="显示浮窗提示 "
                         style="@style/BaseDarkTextStyle"
-                        android:layout_marginTop="10dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-
-                <android.support.v7.widget.SwitchCompat
-                        android:id="@+id/debug_box"
-                        android:text="调试运行  "
-                        android:layout_gravity="right"
-                        style="@style/BaseDarkTextStyle"
-                        android:layout_marginTop="10dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
                 <android.support.v7.widget.SwitchCompat
                         android:id="@+id/holiday_box"
-                        android:text="跳过节假日  "
+                        android:text="跳过节假日 "
                         android:layout_gravity="center_horizontal"
                         style="@style/BaseDarkTextStyle"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginLeft="4dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
-            </FrameLayout>
+
+                <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/debug_box"
+                        android:text="调试运行 "
+                        android:layout_gravity="right"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_marginLeft="4dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+            </LinearLayout>
 
 
             <android.support.constraint.ConstraintLayout

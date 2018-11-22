@@ -1,5 +1,6 @@
 package com.angcyo.dingding
 
+import android.view.accessibility.AccessibilityEvent
 import com.angcyo.uiview.less.accessibility.BaseAccessibilityService
 import com.angcyo.uiview.less.kotlin.runActivity
 import com.angcyo.uiview.less.utils.RUtils
@@ -30,5 +31,17 @@ class DingDingAccessibility : BaseAccessibilityService() {
         Tip.show("助手已断开服务.")
 
         DingDingInterceptor.screenshot?.destroy()
+    }
+
+    override fun checkLastPackageName(event: AccessibilityEvent) {
+        super.checkLastPackageName(event)
+
+        //LogFile.acc("lastPackageName:$lastPackageName")
+        LogFile.acc(
+            "切换到:${AccessibilityEvent.eventTypeToString(event.eventType)}" +
+                    "\n主:${rootInActiveWindow.packageName}" +
+                    "\n副:${event.packageName}" +
+                    "\n类:${event.className} ${event.action}"
+        )
     }
 }

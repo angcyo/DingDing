@@ -9,7 +9,6 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.text.TextUtils
 import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
-import com.angcyo.http.Http
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.RApplication
 import com.angcyo.uiview.less.accessibility.Permission
@@ -250,8 +249,6 @@ class MainActivity : BaseAppCompatActivity() {
             viewHolder.tv(R.id.start_button).text = "停止挂机"
 //            builder.append("\n本次上班打卡预设时间:${DingDingService.startTime}")
 //            builder.append("\n本次下班打卡预设时间:${DingDingService.endTime}")
-
-            Tip.show("助手挂机中...")
         } else {
             viewHolder.tv(R.id.start_button).text = "开始挂机"
         }
@@ -259,6 +256,7 @@ class MainActivity : BaseAppCompatActivity() {
         builder.append("\n请将程序添加到`电池优化`白名单.")
         builder.append("\n请取消程序的后台配置限制(如果有)")
         builder.append("\n请取消锁屏密码,可以自动亮屏并解锁(如果满足)")
+        builder.append("\n请把锁屏时间设置成10分钟以上")
 
         viewHolder.tv(R.id.tip_text_view).text = builder
     }
@@ -274,7 +272,7 @@ class MainActivity : BaseAppCompatActivity() {
         val mediaProjection = screenshot?.onActivityResult(resultCode, data) {
             DingDingInterceptor.handEvent = false
 
-            DingDingService.isTaskStart = !DingDingService.isTaskStart
+            DingDingService.isTaskStart = true
 
             updateTipTextView()
 

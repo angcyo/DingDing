@@ -23,6 +23,13 @@ public class WordBean {
     private long log_id;
     private int words_result_num;
     private List<WordsResultBean> words_result;
+    /**
+     * error_msg : Open api daily request limit reached
+     * error_code : 17
+     */
+
+    private String error_msg;
+    private int error_code;
 
     public long getLog_id() {
         return log_id;
@@ -92,6 +99,22 @@ public class WordBean {
             }
         }
         return rect;
+    }
+
+    public String getError_msg() {
+        return error_msg;
+    }
+
+    public void setError_msg(String error_msg) {
+        this.error_msg = error_msg;
+    }
+
+    public int getError_code() {
+        return error_code;
+    }
+
+    public void setError_code(int error_code) {
+        this.error_code = error_code;
     }
 
     public static class WordsResultBean {

@@ -33,6 +33,13 @@ object OCR {
             return Hawk.get("holiday_box", true)
         }
 
+    /**50次以上后, 换接口*/
+    var ocr_count: Int
+        get() = Hawk.get("ocr_count", 0)
+        set(value) {
+            Hawk.put("ocr_count", value)
+        }
+
     fun init() {
         val config_bean = Hawk.get("config_bean", "")
         if (TextUtils.isEmpty(config_bean)) {
@@ -54,7 +61,7 @@ object OCR {
                     data?.let {
                         val toJson = it.toJson()
 
-                        LogFile.log(toJson)
+                        LogFile.http(toJson)
 
                         Hawk.put("config_bean", toJson)
 
@@ -121,6 +128,19 @@ object OCR {
     }
 
     @Synchronized
+    fun ocr(image: String, end: ((WordBean?) -> Unit)? = null) {
+        if (isIng) {
+            return
+        }
+
+        if (ocr_count >= 45) {
+            general(image, end)
+        } else {
+            accurate(image, end)
+        }
+    }
+
+    @Synchronized
     fun general_basic(image: String, end: ((WordBean?) -> Unit)? = null) {
         if (isIng) {
             return
@@ -161,6 +181,10 @@ object OCR {
                             T_.error(it.message)
                         }
                         end?.invoke(data)
+
+                        data?.let {
+                            LogFile.ocr(it.toJson())
+                        }
                     }
                 })
         }
@@ -183,7 +207,17 @@ object OCR {
                         error?.let {
                             T_.error(it.message)
                         }
-                        end?.invoke(data)
+                        data?.let {
+                            LogFile.ocr(it.toJson())
+
+                            if (it.error_code > 0) {
+                                ocr_count = 50
+
+                                general(image, end)
+                            } else {
+                                end?.invoke(data)
+                            }
+                        }
                     }
                 })
         }
@@ -200,6 +234,8 @@ object OCR {
                     super.onEnd(data, error)
                     data?.let {
                         monthBean = it
+
+                        LogFile.http(it.toString())
                     }
                 }
             })

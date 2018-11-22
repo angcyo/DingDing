@@ -16,4 +16,20 @@ object LogFile {
     fun timeTick(data: String = "tick") {
         RUtils.saveToSDCard("time_tick.log", data)
     }
+
+    fun threadTick(data: String = "tick") {
+        RUtils.saveToSDCard("thread_tick.log", data)
+    }
+
+    fun ocr(data: String) {
+        RUtils.saveToSDCard("ocr.log", data)
+    }
+
+    fun acc(data: String) {
+        RUtils.saveToSDCard("acc.log", data)
+    }
+
+    fun http(data: String) {
+        RUtils.saveToSDCard("http.log", data)
+    }
 }

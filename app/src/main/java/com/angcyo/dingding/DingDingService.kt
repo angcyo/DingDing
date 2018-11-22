@@ -43,6 +43,9 @@ class DingDingService : BaseService() {
         @Deprecated("使用定时器控制")
         var run = false
 
+        @Volatile
+        var threadRun = false
+
         const val DEFAULT_PATTERN = "HH:mm"
         const val DEFAULT_PATTERN_CALC_SPAN = "HH:mm:ss"
 
@@ -67,8 +70,8 @@ class DingDingService : BaseService() {
 
         /**随机产生上下班时间*/
         //上下班时间
-        var startTime: String = "08:30"
-        var endTime: String = "18:10"
+        var startTime: String = "08:30:00"
+        var endTime: String = "18:10:00"
 
         //是否触发了上班打卡
         var isStartTimeDo = false
@@ -93,6 +96,7 @@ class DingDingService : BaseService() {
 
         /**Github 数据缓存 有3分钟, 每2分钟检查一次*/
         const val CHECK_TASK_DELAY = 120_000L
+        var CHECK_TIME_DELAY = if (BuildConfig.DEBUG) 10_000L else 1_000L
     }
 
     override fun onCreate() {
@@ -110,11 +114,17 @@ class DingDingService : BaseService() {
 
             toDingDing()
         } else if (command == CMD_RESET_TIME) {
-            handler.sendEmptyMessage(MSG_CHECK_TIME)
-            handler.sendEmptyMessageDelayed(MSG_GET_CONFIG, CHECK_TASK_DELAY)
-
             resetTime()
+
+            threadRun = true
+            ThreadTick().start()
+
+            Tip.show("助手挂机中...")
+
+            handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, CHECK_TIME_DELAY)
+            handler.sendEmptyMessageDelayed(MSG_GET_CONFIG, CHECK_TASK_DELAY)
         } else if (command == CMD_STOP) {
+            threadRun = false
             isTaskStart = false
 
             startPendingIntent?.let {
@@ -161,6 +171,11 @@ class DingDingService : BaseService() {
     var endPendingIntent: PendingIntent? = null
 
     private var startRunnable = Runnable {
+        if (isStartTimeDo) {
+            return@Runnable
+        }
+        isStartTimeDo = true
+
         LogFile.log("startRunnable run.")
 
         BaseService.start(this, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
@@ -175,6 +190,11 @@ class DingDingService : BaseService() {
     }
 
     private var endRunnable = Runnable {
+        if (isEndTimeDo) {
+            return@Runnable
+        }
+        isEndTimeDo = true
+
         LogFile.log("endRunnable run.")
 
         BaseService.start(this, DingDingService::class.java, DingDingService.CMD_TO_DING_DING)
@@ -198,9 +218,9 @@ class DingDingService : BaseService() {
         val delayEnd = nextInt(defaultDelayTime.toInt()) * 60 * 1000L
 
         startTime = (defaultStartTime.toMillis(DEFAULT_PATTERN) - delayMillis + delayStart)
-            .toTime("HH:mm:ss")
+            .toTime(DEFAULT_PATTERN_CALC_SPAN)
         endTime = (defaultEndTime.toMillis(DEFAULT_PATTERN) + delayMillis - delayEnd)
-            .toTime("HH:mm:ss")
+            .toTime(DEFAULT_PATTERN_CALC_SPAN)
 
         //startTime = "08:${nextInt(20, 40)}:${nextInt(0, 59)}"
         //endTime = "18:${nextInt(0, 30)}:${nextInt(0, 59)}"
@@ -211,8 +231,26 @@ class DingDingService : BaseService() {
         //几号
         lastDay = spiltTime[2]
 
+        LogFile.log("设置在: $startTime  $endTime  节假日:${OCR.isHoliday()}")
+
         RLocalBroadcastManager.sendBroadcast(MainActivity.UPDATE_TIME)
         OCR.month()
+
+        updateBroadcast(true)
+        updateBottomTipBroadcast()
+    }
+
+    private fun updateBroadcast(shareText: Boolean = false) {
+        L.v("更新任务定时器. 跳过: (${isStartTimeDo || isEndTimeDo})")
+        LogFile.log("更新任务定时器.  跳过: (${isStartTimeDo || isEndTimeDo})")
+
+        if (isStartTimeDo || isEndTimeDo) {
+            return
+        }
+
+        wakeUpAndUnlock(Runnable {
+            LogFile.log("更新任务 唤醒成功.")
+        })
 
         startPendingIntent?.let {
             RAlarmManager.cancel(this, it)
@@ -224,8 +262,6 @@ class DingDingService : BaseService() {
 
         removeDelayThread(startRunnable)
         removeDelayThread(endRunnable)
-
-        LogFile.log("设置在: $startTime  $endTime  节假日:${OCR.isHoliday()}")
 
         if (OCR.isHoliday() && !debugRun) {
             //节假日
@@ -271,13 +307,17 @@ class DingDingService : BaseService() {
                     RAlarmManager.setDelay(this, startTimeDelay, startPendingIntent!!)
                     postDelayThread(startTimeDelay, startRunnable)
 
-                    LogFile.log("上班任务($startTime)定时在 ${RUtils.formatTime(startTimeDelay)} 后.")
+                    if (shareText) {
+                        LogFile.log("上班任务($startTime)定时在 ${RUtils.formatTime(startTimeDelay)} 后.")
+                    }
                 }
                 if (timeSpan[1] < 0) {
                     //已经下班, 1秒后 更新打卡
                     postDelayThread(1_000, endRunnable)
 
-                    LogFile.log("已经下班, 1秒后 更新打卡.")
+                    if (shareText) {
+                        LogFile.log("已经下班, 1秒后 更新打卡.")
+                    }
                 } else {
                     val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
                     builder.append("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
@@ -285,14 +325,17 @@ class DingDingService : BaseService() {
                     RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
                     postDelayThread(endTimeDelay, endRunnable)
 
-                    shareText(builder.toString())
-
-                    LogFile.log("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                    if (shareText) {
+                        if (timeSpan[0] > 60 || timeSpan[1] > 60) {
+                            //短时间就执行的任务, 不执行分享
+                            shareText(builder.toString())
+                        }
+                        LogFile.log("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                    }
                 }
             }
         }
 
-        updateBottomTipBroadcast()
     }
 
     private fun updateBottomTipBroadcast() {
@@ -437,6 +480,8 @@ class DingDingService : BaseService() {
 
             //隔天, 重置任务 和定时广播
             if (spiltTime[2] != lastDay) {
+                OCR.ocr_count = 0
+
                 resetTime()
 
                 shareTime()
@@ -446,12 +491,16 @@ class DingDingService : BaseService() {
 //                shareTime()
 //            }
 
+            val startTimeLong = startTime.toMillis(DEFAULT_PATTERN).spiltTime()
+            val endTimeLong = endTime.toMillis(DEFAULT_PATTERN).spiltTime()
+
             //心跳提示, 用来提示软件还活着
-            if (spiltTime[3] == 7 &&
-                (spiltTime[4] % (if (BuildConfig.DEBUG) 10 else 10) == 0) &&
-                spiltTime[5] == 0
+            if (spiltTime[3] in (startTimeLong[3] - 1..startTimeLong[3]) ||
+                spiltTime[3] in (endTimeLong[3] - 1..endTimeLong[3])
             ) {
-                shareTime(true)
+                //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
+                updateBroadcast()
+                //shareTime(true)
             }
 
             /**采用定时广播的方式实现*/
@@ -552,7 +601,7 @@ class DingDingService : BaseService() {
 
             LogFile.timeTick()
 
-            handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, 1_000)
+            handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, CHECK_TIME_DELAY)
         } else if (msg.what == MSG_GET_CONFIG) {
             OCR.loadConfig()
 
@@ -564,12 +613,18 @@ class DingDingService : BaseService() {
     fun shareTime(heart: Boolean = false) {
         L.i("分享心跳")
 
+        if (isStartTimeDo || isEndTimeDo) {
+            return
+        }
+
         wakeUpAndUnlock(Runnable {
             val spiltTime = nowTime().spiltTime()
 
             val shareTextBuilder = StringBuilder()
             shareTextBuilder.append("来自`${RUtils.getAppName(this)}`的提醒:")
-            shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
+            if (!heart) {
+                shareTextBuilder.append("\n今天的打卡任务已更新:(${spiltTime[0]}-${spiltTime[1]}-${spiltTime[2]})")
+            }
             shareTextBuilder.append("\n上班 $startTime")
             shareTextBuilder.append("\n下班 $endTime")
 
@@ -577,11 +632,11 @@ class DingDingService : BaseService() {
                 shareTextBuilder.append("\n助手还活着请放心.")
             }
 
-            val old = DingDingInterceptor.handEvent
-            DingDingInterceptor.handEvent = true
-            shareTextBuilder.toString().share(this)
+            if (isStartTimeDo || isEndTimeDo) {
 
-            gotoMain(old)
+            } else {
+                shareText(shareTextBuilder.toString())
+            }
 
             LogFile.log("心跳:$heart")
             LogFile.log("上班 $startTime  下班 $endTime")
@@ -589,18 +644,33 @@ class DingDingService : BaseService() {
     }
 
     fun shareText(text: String) {
+        if (isStartTimeDo || isEndTimeDo) {
+            return
+        }
+
         L.i("分享文本")
+
+        LogFile.log("分享文本:$text")
+
         wakeUpAndUnlock(Runnable {
 
-            val old = DingDingInterceptor.handEvent
-            DingDingInterceptor.handEvent = true
-            text.share(this)
+            if (isStartTimeDo || isEndTimeDo) {
 
-            gotoMain(old)
+            } else {
+                val old = DingDingInterceptor.handEvent
+                DingDingInterceptor.handEvent = true
+                text.share(this)
+
+                gotoMain(old)
+            }
         })
     }
 
     fun shareScreenshot() {
+        if (isStartTimeDo || isEndTimeDo) {
+            return
+        }
+
         wakeUpAndUnlock(Runnable {
             DingDingInterceptor.capture {
 
@@ -616,6 +686,11 @@ class DingDingService : BaseService() {
 
     private fun gotoMain(oldHandEvent: Boolean) {
         mainHandler.postDelayed({
+
+            if (isStartTimeDo || isEndTimeDo) {
+                return@postDelayed
+            }
+
             runMain()
             DingDingInterceptor.handEvent = oldHandEvent
         }, 5_000)
@@ -624,5 +699,17 @@ class DingDingService : BaseService() {
     override fun onDestroy() {
         super.onDestroy()
         LogFile.log("打卡服务:onDestroy")
+        threadRun = false
+    }
+
+    class ThreadTick : Thread() {
+        override fun run() {
+            super.run()
+
+            while (threadRun) {
+                LogFile.threadTick()
+                sleep(1_000)
+            }
+        }
     }
 }

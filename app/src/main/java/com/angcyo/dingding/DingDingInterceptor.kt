@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Path
+import android.os.Build
 import android.text.TextUtils
 import android.view.accessibility.AccessibilityEvent
 import com.angcyo.dingding.bean.WordBean
@@ -74,6 +75,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         filterPackageName = DING_DING
 
         screenshot = Screenshot.capture(context) { bitmap, _ ->
+            L.i("拿到屏幕截图:$bitmap")
             lastBitmap = WeakReference(bitmap)
             //            OCR.general(bitmap.toBase64())
 //            OCR.general_basic(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
@@ -81,7 +83,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 //            OCR.accurate(BitmapFactory.decodeFile("/sdcard/test.jpg").toBase64())
             onCaptureEnd?.invoke(bitmap)
             onCaptureEnd = null
-            OCR.general(bitmap.toBase64()) {
+            OCR.ocr(bitmap.toBase64()) {
                 lastWordBean = it
                 val oldSearchWordEnd = onSearchWordEnd
                 onSearchWordEnd = null
@@ -149,10 +151,12 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     if (!it.isEmpty) {
                         val nowTime = nowTime()
 
-                        if ((nowTime - lastDoubleTime) > 1_000) {
+                        if ((nowTime - lastDoubleTime) > 2_000) {
 
                             Tip.show("跳转工作Tab")
 
+                            LogFile.acc("双击:$it")
+                            L.i("双击:$it")
                             accService.double(it.toPath())
 
                             lastDoubleTime = nowTime
@@ -167,19 +171,27 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 //网页浏览界面 打卡界面就是网页
                 Tip.show("检查是否是打卡页面.")
 
+                LogFile.acc("检查是否是打卡页面.")
+
                 delay(HTTP_DELAY) {
                     checkDingCardActivity(3) {
+
+                        if (Build.MODEL == "OPPO A83") {
+                            //oppo 手机分享图片 经常不成功. 杀掉QQ, 再分享提高成功率
+                            accService.kill(ShareQQInterceptor.QQ)
+                        }
+
                         clickCard(accService)
 //                        back(accService)
                     }
                 }
             } else {
                 if (lastAppIsDingDing()) {
-                    L.i("未知的界面")
+                    L.i("未知的界面") //不支持的界面
                     if (!TextUtils.isEmpty(event.className) && event.className.contains("Dialog")) {
-                        Tip.show("不支持的对话框")
+                        Tip.show("${event.className}")
                     } else {
-                        Tip.show("不支持的界面")
+                        Tip.show("${event.className}")
                     }
                 }
             }
@@ -189,29 +201,47 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
     fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
         if (!lastAppIsDingDing()) {
-            L.i("请回到钉钉首页")
+            L.i("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
             Tip.show("请回到钉钉首页.")
+
+            LogFile.acc("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
             return
         }
         Tip.show("识别WebView")
         accService.move(Path().apply {
             val realRect = accService.displayRealRect()
-            L.i("屏幕大小:$realRect")
-            moveTo(realRect.centerX().toFloat(), realRect.height().toFloat() * 4f / 5f)
-            lineTo(realRect.centerX().toFloat(), realRect.height().toFloat() * 2f / 5f)
+            val y1 = realRect.height().toFloat() * 3f / 4f
+            val y2 = realRect.height().toFloat() * 1f / 4f
+
+            L.i("屏幕大小:$realRect  开始滚动:$y1 -> $y2")
+            moveTo(realRect.centerX().toFloat(), y1)
+            lineTo(realRect.centerX().toFloat(), y2)
+
+            LogFile.acc("屏幕大小:$realRect  开始滚动:$y1 -> $y2")
+
+            Tip.show("开始滚动:$y1 -> $y2")
         }, object : GestureCallback() {
             override fun onEnd(gestureDescription: GestureDescription?) {
                 super.onEnd(gestureDescription)
 
+                LogFile.acc("滚动结束")
+                L.i("滚动结束")
+
                 searchScreenWords {
                     it?.let {
+                        Tip.show("识别 `考勤打卡`")
+
                         it.getRectByWord("勤打卡").let {
+
+                            LogFile.acc("查找 `勤打卡` 坐标. $it")
+
                             if (it.isEmpty) {
                                 delay(HTTP_DELAY) {
-
                                     if (!lastAppIsDingDing()) {
-                                        L.i("请回到钉钉首页")
+                                        L.i("请回到钉钉首页2 last:${BaseAccessibilityService.lastPackageName}")
                                         Tip.show("请回到钉钉首页.")
+
+                                        LogFile.acc("请回到钉钉首页2 last:${BaseAccessibilityService.lastPackageName}")
                                     } else {
                                         jumpToDingCardActivity(accService)
                                     }
@@ -223,8 +253,10 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                                     accService.touch(it.toPath())
                                 } else {
-                                    L.i("请回到钉钉首页")
+                                    L.i("请回到钉钉首页3, last:${BaseAccessibilityService.lastPackageName}")
                                     Tip.show("请回到钉钉首页")
+
+                                    LogFile.acc("请回到钉钉首页3 last:${BaseAccessibilityService.lastPackageName}")
                                 }
                             }
                         }
@@ -271,7 +303,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
      * */
     fun clickCard(accService: BaseAccessibilityService, retryCount: Int = 3) {
         if (!lastAppIsDingDing()) {
-            L.i("请回到钉钉打卡界面")
+            L.i("请回到钉钉打卡界面 ${BaseAccessibilityService.lastPackageName}")
+            LogFile.log("请回到钉钉打卡界面 ${BaseAccessibilityService.lastPackageName}")
             return
         }
 
@@ -535,21 +568,21 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     fun isMainActivity(accService: BaseAccessibilityService, event: AccessibilityEvent): Boolean {
         var result = false
         if ("android.widget.FrameLayout" == event.className) {
-            findNodeByText("消息", accService, event).let {
-                L.i("消息:${it.size}")
-            }
-            findNodeByText("DING", accService, event).let {
-                L.i("DING:${it.size}")
-            }
-            findNodeByText("工作", accService, event).let {
-                L.i("工作:${it.size}")
-            }
-            findNodeByText("通讯录", accService, event).let {
-                L.i("通讯录:${it.size}")
-            }
-            findNodeByText("我的", accService, event).let {
-                L.i("我的:${it.size}")
-            }
+//            findNodeByText("消息", accService, event).let {
+//                L.i("消息:${it.size}")
+//            }
+//            findNodeByText("DING", accService, event).let {
+//                L.i("DING:${it.size}")
+//            }
+//            findNodeByText("工作", accService, event).let {
+//                L.i("工作:${it.size}")
+//            }
+//            findNodeByText("通讯录", accService, event).let {
+//                L.i("通讯录:${it.size}")
+//            }
+//            findNodeByText("我的", accService, event).let {
+//                L.i("我的:${it.size}")
+//            }
             findNodeById("bottom_tab", accService, event).let {
                 L.i("bottom_tab:${it.size}")
                 result = it.isNotEmpty()
@@ -559,6 +592,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     }
 
     fun back(accService: BaseAccessibilityService) {
+        handEvent = false
         isBack = true
         Tip.show("开始回退钉钉界面")
 
