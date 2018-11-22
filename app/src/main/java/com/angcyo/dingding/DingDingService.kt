@@ -250,8 +250,15 @@ class DingDingService : BaseService() {
             return
         }
 
+        if (Screenshot.isScreenOn(this)) {
+
+        } else {
+            runMain()
+        }
+
         wakeUpAndUnlock(Runnable {
             LogFile.log("更新任务 唤醒成功.")
+            Tip.show("唤醒成功.")
         })
 
         startPendingIntent?.let {
