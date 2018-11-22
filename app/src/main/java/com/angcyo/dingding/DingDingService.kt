@@ -501,6 +501,9 @@ class DingDingService : BaseService() {
                 //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
                 updateBroadcast()
                 //shareTime(true)
+                Tip.show("Ready 请保持屏幕常亮.")
+
+                //gotoMain(DingDingInterceptor.handEvent)
             }
 
             /**采用定时广播的方式实现*/
