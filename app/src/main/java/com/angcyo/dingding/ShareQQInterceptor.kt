@@ -23,6 +23,7 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
         filterPackageNameList.add("android")
         filterPackageNameList.add(QQ)
         filterPackageNameList.add("com.huawei.android.internal.app")
+//        filterPackageNameList.add("com.angcyo.dingding")
     }
 
     /**是否点了转发*/
@@ -31,16 +32,25 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
     override fun onAccessibilityEvent(accService: BaseAccessibilityService, event: AccessibilityEvent) {
         super.onAccessibilityEvent(accService, event)
 
+//        if (BuildConfig.DEBUG) {
+//            if (event.packageName == "com.tencent.mobileqq" || event.packageName == "com.angcyo.dingding") {
+//                L.e("------------------------------------------------start")
+//                BaseAccessibilityService.logNodeInfo(accService.rootInActiveWindow)
+//                BaseAccessibilityService.logNodeInfo(event.source)
+//                L.e("------------------------------------------------end")
+//            }
+//        }
+
         if (!DingDingInterceptor.handEvent) {
             return
         }
 
-        if (BuildConfig.DEBUG) {
-            if (event.packageName == "android") {
-                BaseAccessibilityService.logNodeInfo(accService.rootInActiveWindow)
-                BaseAccessibilityService.logNodeInfo(event.source)
-            }
-        }
+//        if (BuildConfig.DEBUG) {
+//            if (event.packageName == "android") {
+//                BaseAccessibilityService.logNodeInfo(accService.rootInActiveWindow)
+//                BaseAccessibilityService.logNodeInfo(event.source)
+//            }
+//        }
 
         if (isWindowStateChanged(event)) {
             if (event.packageName == "android" || event.packageName == "com.huawei.android.internal.app") {
@@ -107,7 +117,9 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
                 LogFile.log("分享给好友 ${event.packageName} ${event.className}")
 
                 //手机QQ
-                if (event.className == "com.tencent.mobileqq.activity.ForwardRecentActivity") {
+                if (event.className == "com.tencent.mobileqq.activity.ForwardRecentActivity" ||
+                    event.className == "com.tencent.connect.common.AssistActivity"
+                ) {
                     //寻找好友
                     val qqUsers = Hawk.get("share_qq", "angcyo")
                     val splitUser = qqUsers.split(" ")
@@ -135,6 +147,12 @@ class ShareQQInterceptor : AccessibilityInterceptor() {
     }
 
     fun shareToUser(users: List<String>, index: Int, accService: BaseAccessibilityService, event: AccessibilityEvent) {
+
+//        if (BuildConfig.DEBUG) {
+//            BaseAccessibilityService.logNodeInfo(accService.rootInActiveWindow)
+//            BaseAccessibilityService.logNodeInfo(event.source)
+//        }
+
         if (users.size > index) {
             findNodeByText(users[index], accService, event).let {
                 LogFile.log("查找QQ会话 ${users[index]} ${it.size}")

@@ -71,6 +71,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     /*双击工作tab的时间*/
     var lastDoubleTime = 0L
 
+    var isCheckCardUI = false
+
     init {
         filterPackageName = DING_DING
 
@@ -174,15 +176,18 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 LogFile.acc("检查是否是打卡页面.")
 
                 delay(HTTP_DELAY) {
-                    checkDingCardActivity(3) {
-
-                        if (Build.MODEL == "OPPO A83") {
-                            //oppo 手机分享图片 经常不成功. 杀掉QQ, 再分享提高成功率
-                            accService.kill(ShareQQInterceptor.QQ)
-                        }
-
-                        clickCard(accService)
+                    if (isCheckCardUI) {
+                        LogFile.acc("已经在check card ui.")
+                    } else {
+                        checkDingCardActivity(3) {
+                            //                        if (Build.MODEL == "OPPO A83") {
+//                            //oppo 手机分享图片 经常不成功. 杀掉QQ, 再分享提高成功率
+//                            accService.kill(ShareQQInterceptor.QQ)
+//                        }
+                            isCheckCardUI = true
+                            clickCard(accService)
 //                        back(accService)
+                        }
                     }
                 }
             } else {
@@ -305,6 +310,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         if (!lastAppIsDingDing()) {
             L.i("请回到钉钉打卡界面 ${BaseAccessibilityService.lastPackageName}")
             LogFile.log("请回到钉钉打卡界面 ${BaseAccessibilityService.lastPackageName}")
+
+            isCheckCardUI = false
             return
         }
 
@@ -341,6 +348,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                                                 shareQQ(accService)
 
+                                                isCheckCardUI = false
                                                 return@searchScreenWords
                                             }
                                         }
@@ -391,6 +399,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         if (!this.isEmpty) {
                             Tip.show("上班打卡成功.")
 
+                            //上班打卡成功, 后dialog会自动翻转
                             delay(HTTP_DELAY) {
                                 searchScreenWords {
                                     wordBean.getRectByWord("我知道了").let {
@@ -401,7 +410,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                                 Tip.show("分享至QQ")
 
                                                 isBack = true
-                                                it.share(accService)
+                                                it.share(accService, true)
 
                                                 delay(SHARE_DELAY) {
                                                     accService.home()
@@ -415,6 +424,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     }
                                 }
                             }
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -435,6 +445,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     shareQQ(accService)
                                 }
                             }
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -452,6 +463,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     shareQQ(accService)
                                 }
                             }
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -471,6 +483,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     checkCardReult(accService)
                                 }
                             }
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -484,6 +497,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                             shareQQ(accService)
 
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -499,6 +513,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                             shareQQ(accService)
 
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -514,6 +529,34 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                             shareQQ(accService)
 
+                            isCheckCardUI = false
+                            return@searchScreenWords
+                        }
+                    }
+
+                    //对话框
+                    wordBean.getRectByWord("我知道了").let {
+                        L.i("我知道了:$it")
+
+                        if (!it.isEmpty) {
+                            accService.touch(it.toPath())
+
+                            shareQQ(accService)
+
+                            isCheckCardUI = false
+                            return@searchScreenWords
+                        }
+                    }
+
+                    //上班打卡 分享对话框 取消分享
+                    wordBean.getRectByWord("取消分享").let {
+
+                        if (!it.isEmpty) {
+                            accService.touch(it.toPath())
+
+                            shareQQ(accService)
+
+                            isCheckCardUI = false
                             return@searchScreenWords
                         }
                     }
@@ -524,22 +567,29 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         } else {
                             Tip.show("OCR未识别.")
                         }
+                        isCheckCardUI = false
                     } else {
                         Tip.show("重试$retry 结果识别")
 
                         checkCardReult(accService, isInCardUI, retry - 1)
                     }
                 }
+                if (it == null) {
+                    isCheckCardUI = false
+                }
             }
         }
     }
 
     fun shareQQ(accService: BaseAccessibilityService) {
+
+        DingDingService.onStartShare(accService)
+
         capture {
             Tip.show("分享至QQ")
 
             isBack = true
-            it.share(accService)
+            it.share(accService, true)
 
             delay(SHARE_DELAY) {
                 accService.home()
@@ -611,6 +661,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         delay(1_000) {
                             Tip.show("恭喜,流程结束!.")
 
+                            isCheckCardUI = false
                             accService.runMain()
                         }
                     }

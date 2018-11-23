@@ -12,6 +12,11 @@ import com.angcyo.uiview.less.utils.RUtils
  * @date 2018/11/13
  */
 class DingDingAccessibility : BaseAccessibilityService() {
+
+    init {
+        logNodeInfo = false
+    }
+
     override fun onServiceConnected() {
         super.onServiceConnected()
         addInterceptor(DingDingInterceptor(this))
@@ -39,7 +44,7 @@ class DingDingAccessibility : BaseAccessibilityService() {
         //LogFile.acc("lastPackageName:$lastPackageName")
         LogFile.acc(
             "切换到:${AccessibilityEvent.eventTypeToString(event.eventType)}" +
-                    "\n主:${rootInActiveWindow.packageName}" +
+                    "\n主:${rootInActiveWindow?.packageName ?: "null"}" +
                     "\n副:${event.packageName}" +
                     "\n类:${event.className} ${event.action}"
         )

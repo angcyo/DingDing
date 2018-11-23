@@ -7,7 +7,6 @@
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior"
         tools:showIn="@layout/activity_main"
-        android:padding="8dp"
         tools:context=".MainActivity">
 
     <android.support.v4.widget.NestedScrollView
@@ -18,6 +17,7 @@
                 android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:focusable="true"
+                android:padding="8dp"
                 android:focusableInTouchMode="true"
                 android:layout_height="wrap_content">
 
@@ -197,36 +197,52 @@
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="0dp"
                     android:layout_height="wrap_content">
 
                 <android.support.v7.widget.SwitchCompat
                         android:id="@+id/close_float_box"
-                        android:text="显示浮窗提示 "
-                        style="@style/BaseDarkTextStyle"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"/>
-
-                <android.support.v7.widget.SwitchCompat
-                        android:id="@+id/holiday_box"
-                        android:text="跳过节假日 "
-                        android:layout_gravity="center_horizontal"
+                        android:text="显示浮窗提示'"
                         style="@style/BaseDarkTextStyle"
                         android:layout_marginLeft="4dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
                 <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/holiday_box"
+                        android:text="智能跳过节假日和双休'"
+                        android:layout_gravity="center_horizontal"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_marginLeft="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                <android.support.v7.widget.SwitchCompat
                         android:id="@+id/debug_box"
-                        android:text="调试运行 "
+                        android:text="调试测试运行'"
                         android:layout_gravity="right"
                         style="@style/BaseDarkTextStyle"
                         android:layout_marginLeft="4dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
-            </LinearLayout>
+                <android.support.v7.widget.SwitchCompat
+                        android:id="@+id/keep_box"
+                        android:text="保持屏幕常亮(请勿切换APP)'"
+                        android:layout_gravity="right"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_marginLeft="10dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
 
+            </LinearLayout>
 
             <android.support.constraint.ConstraintLayout
                     android:layout_width="match_parent"

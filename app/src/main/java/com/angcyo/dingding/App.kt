@@ -1,6 +1,7 @@
 package com.angcyo.dingding
 
 import com.angcyo.uiview.less.RApplication
+import com.angcyo.umeng.UM
 
 /**
  *
@@ -12,5 +13,6 @@ class App : RApplication() {
     override fun onInit() {
         super.onInit()
         OCR.init()
+        UM.init(this, BuildConfig.DEBUG)
     }
 }

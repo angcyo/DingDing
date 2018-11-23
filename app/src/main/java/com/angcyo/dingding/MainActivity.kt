@@ -124,6 +124,10 @@ class MainActivity : BaseAppCompatActivity() {
             DingDingService.debugRun = isChecked
         }
 
+        viewHolder.cb(R.id.keep_box, false, "keep_on") { _, isChecked ->
+            window.decorView.keepScreenOn = isChecked
+        }
+
         RLocalBroadcastManager
             .instance()
             .registerBroadcast(
@@ -253,8 +257,8 @@ class MainActivity : BaseAppCompatActivity() {
             viewHolder.tv(R.id.start_button).text = "开始挂机"
         }
 
-        builder.append("\n请将程序添加到`电池优化`白名单.")
-        builder.append("\n请取消程序的后台配置限制(如果有)")
+        builder.append("\n*请保持屏幕常亮, 提高成功率")
+        builder.append("\n*锁屏前, 请将程序切换至前台")
         builder.append("\n请取消锁屏密码,可以自动亮屏并解锁(如果满足)")
         builder.append("\n请把锁屏时间设置成10分钟以上")
 

@@ -1,10 +1,13 @@
 package com.angcyo.dingding
 
 import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.os.Message
 import com.angcyo.lib.L
+import com.angcyo.uiview.less.accessibility.kill
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.*
 import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
@@ -99,6 +102,13 @@ class DingDingService : BaseService() {
         var CHECK_TIME_DELAY = if (BuildConfig.DEBUG) 10_000L else 1_000L
 
         var lastHitTime = 0L
+
+        fun onStartShare(context: Context) {
+            if (Build.MODEL == "OPPO A83") {
+                //oppo 手机分享图片 经常不成功. 杀掉QQ, 再分享提高成功率
+                context.kill(ShareQQInterceptor.QQ)
+            }
+        }
     }
 
     override fun onCreate() {
@@ -242,9 +252,9 @@ class DingDingService : BaseService() {
         updateBottomTipBroadcast()
     }
 
-    private fun updateBroadcast(shareText: Boolean = false) {
+    private fun updateBroadcast(shareText: Boolean = false, isWakeUp: Boolean = false) {
         L.v("更新任务定时器. 跳过: (${isStartTimeDo || isEndTimeDo})")
-        LogFile.log("更新任务定时器.  跳过: (${isStartTimeDo || isEndTimeDo})")
+        LogFile.timeTick("更新任务定时器.  跳过: (${isStartTimeDo || isEndTimeDo})")
 
         if (isStartTimeDo || isEndTimeDo) {
             return
@@ -274,6 +284,20 @@ class DingDingService : BaseService() {
 
         if (OCR.isHoliday() && !debugRun) {
             //节假日
+
+            if (shareText) {
+                val builder = StringBuilder()
+
+                val nowTime = nowTime().spiltTime()
+                builder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
+                builder.append("周${nowTime[7]}\n")
+                builder.append("今天放假哦 ^_^ T_T")
+
+                if (isWakeUp) {
+                    builder.append("\n助手已被唤醒.")
+                }
+                shareText(builder.toString())
+            }
         } else {
             val timeSpan = calcTimeSpan()
 
@@ -336,6 +360,9 @@ class DingDingService : BaseService() {
 
                     if (shareText) {
                         if (timeSpan[0] > 60 || timeSpan[1] > 60) {
+                            if (isWakeUp) {
+                                builder.append("\n助手已被唤醒.")
+                            }
                             //短时间就执行的任务, 不执行分享
                             shareText(builder.toString())
                         }
@@ -475,7 +502,11 @@ class DingDingService : BaseService() {
     }
 
     fun toDingDing() {
+        LogFile.log("启动钉钉 唤醒屏幕")
+
         wakeUpAndUnlock(Runnable {
+            LogFile.log("启动钉钉 唤醒屏幕2")
+
             DingDingInterceptor.handEvent = true
             RUtils.startApp(this, DingDingInterceptor.DING_DING)
         })
@@ -512,7 +543,7 @@ class DingDingService : BaseService() {
                     //30分钟通知一次
 
                     //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
-                    updateBroadcast()
+                    updateBroadcast(true, true)
                     //shareTime(true)
                     Tip.show("Ready 请保持屏幕常亮.")
 
@@ -670,6 +701,8 @@ class DingDingService : BaseService() {
 
         LogFile.log("分享文本:$text")
 
+        DingDingService.onStartShare(this)
+
         wakeUpAndUnlock(Runnable {
 
             if (isStartTimeDo || isEndTimeDo) {
@@ -677,7 +710,14 @@ class DingDingService : BaseService() {
             } else {
                 val old = DingDingInterceptor.handEvent
                 DingDingInterceptor.handEvent = true
-                text.share(this)
+
+                text.share(this, true)
+
+//                UM.shareText(
+//                    MainActivity.activity?.get(),
+//                    SHARE_MEDIA.QQ,
+//                    text, UM.ShareListener()
+//                )
 
                 gotoMain(old)
             }
@@ -689,13 +729,21 @@ class DingDingService : BaseService() {
             return
         }
 
+        DingDingService.onStartShare(this)
+
         wakeUpAndUnlock(Runnable {
             DingDingInterceptor.capture {
 
                 val old = DingDingInterceptor.handEvent
                 DingDingInterceptor.handEvent = true
 
-                it.share(this)
+                it.share(this, true)
+
+//                UM.shareImage(
+//                    MainActivity.activity?.get(),
+//                    SHARE_MEDIA.QQ,
+//                    it, R.mipmap.ding_ding_logo, UM.ShareListener()
+//                )
 
                 gotoMain(old)
             }

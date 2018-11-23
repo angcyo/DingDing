@@ -2,4 +2,5 @@ apply from: '../lib/key.gradle'
 
 dependencies {
     implementation project(':uiviewless')
+    implementation project(':umeng')
 }
