@@ -179,7 +179,9 @@ class MainActivity : BaseAppCompatActivity() {
         viewHolder.click(R.id.test_share_button) {
             currentFocus?.clearFocus()
 
-            BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.TASK_SHARE_TEST)
+            if (Permission.check(this)) {
+                BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.TASK_SHARE_TEST)
+            }
         }
 
         if (BuildConfig.DEBUG) {
