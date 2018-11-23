@@ -538,12 +538,28 @@ class DingDingService : BaseService() {
             if (spiltTime[3] in (startTimeLong[3] - 1..startTimeLong[3]) ||
                 spiltTime[3] in (endTimeLong[3] - 1..endTimeLong[3])
             ) {
+
+
+                var pass = false
+
+                if (spiltTime[3] == startTimeLong[3] ||
+                    spiltTime[3] == endTimeLong[3]
+                ) {
+                    //小时相同
+                    if (spiltTime[4] in (startTimeLong[4] - 10..startTimeLong[4]) ||
+                        spiltTime[4] in (endTimeLong[4] - 10..endTimeLong[4])
+                    ) {
+                        //上下班前10分钟
+                        pass = true
+                    }
+                }
+
                 val nowTime = nowTime()
                 if (nowTime - lastHitTime >= 30 * 60 * 1000L) {
                     //30分钟通知一次
 
                     //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
-                    updateBroadcast(true, true)
+                    updateBroadcast(!pass, true)
                     //shareTime(true)
                     Tip.show("Ready 请保持屏幕常亮.")
 
