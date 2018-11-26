@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Path
-import android.os.Build
 import android.text.TextUtils
 import android.view.accessibility.AccessibilityEvent
 import com.angcyo.dingding.bean.WordBean
@@ -72,6 +71,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     var lastDoubleTime = 0L
 
     var isCheckCardUI = false
+
+    val workTabPath = Path()
 
     init {
         filterPackageName = DING_DING
@@ -159,7 +160,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                             LogFile.acc("双击:$it")
                             L.i("双击:$it")
-                            accService.double(it.toPath())
+                            accService.double(it.toPath().apply {
+                                workTabPath.set(this)
+                            })
 
                             lastDoubleTime = nowTime
 
@@ -204,7 +207,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     }
 
 
-    fun jumpToDingCardActivity(accService: BaseAccessibilityService) {
+    fun jumpToDingCardActivity(accService: BaseAccessibilityService, retryCount: Int = 3) {
         if (!lastAppIsDingDing()) {
             L.i("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
             Tip.show("请回到钉钉首页.")
@@ -212,7 +215,21 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             LogFile.acc("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
             return
         }
-        Tip.show("识别WebView")
+        if (retryCount <= 0) {
+            //重试失败, 回到顶部
+            Tip.show("重试失败, 回到顶部")
+
+            LogFile.acc("重试失败, 回到顶部")
+
+            accService.double(workTabPath)
+
+            delay(HTTP_DELAY) {
+                jumpToDingCardActivity(accService)
+            }
+            return
+        }
+
+        Tip.show("识别WebView $retryCount")
         accService.move(Path().apply {
             val realRect = accService.displayRealRect()
             val y1 = realRect.height().toFloat() * 3f / 4f
@@ -248,7 +265,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                                         LogFile.acc("请回到钉钉首页2 last:${BaseAccessibilityService.lastPackageName}")
                                     } else {
-                                        jumpToDingCardActivity(accService)
+                                        jumpToDingCardActivity(accService, retryCount - 1)
                                     }
                                 }
                             } else {
@@ -588,8 +605,10 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         capture {
             Tip.show("分享至QQ")
 
+            LogFile.share("${this.javaClass.simpleName} 分享至QQ")
+
             isBack = true
-            it.share(accService, true)
+            it.share(accService, true, !DingDingService.isSpecialModel())
 
             delay(SHARE_DELAY) {
                 accService.home()
@@ -598,6 +617,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     isBack = true
 
                     Tip.show("开始回退界面,请等待")
+
+                    LogFile.share("${this.javaClass.simpleName} 开始回退界面")
 
                     DING_DING.startApp(accService)
 
@@ -662,6 +683,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             Tip.show("恭喜,流程结束!.")
 
                             isCheckCardUI = false
+                            DingDingService.isStartTimeDo = false
+                            DingDingService.isEndTimeDo = false
                             accService.runMain()
                         }
                     }

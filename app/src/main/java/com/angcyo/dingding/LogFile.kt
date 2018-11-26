@@ -32,4 +32,8 @@ object LogFile {
     fun http(data: String) {
         RUtils.saveToSDCard("http.log", data)
     }
+
+    fun share(data: String) {
+        RUtils.saveToSDCard("share.log", data)
+    }
 }

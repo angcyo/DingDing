@@ -3,11 +3,11 @@ package com.angcyo.dingding
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
 import com.angcyo.lib.L
-import com.angcyo.uiview.less.accessibility.kill
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.*
 import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
@@ -42,6 +42,8 @@ class DingDingService : BaseService() {
         const val TASK_JUST_DING = 801
         /**分享测试*/
         const val TASK_SHARE_TEST = 802
+        /**分享图片测试*/
+        const val TASK_SHARE_TEST_BITMAP = 803
 
         @Deprecated("使用定时器控制")
         var run = false
@@ -106,8 +108,13 @@ class DingDingService : BaseService() {
         fun onStartShare(context: Context) {
             if (Build.MODEL == "OPPO A83") {
                 //oppo 手机分享图片 经常不成功. 杀掉QQ, 再分享提高成功率
-                context.kill(ShareQQInterceptor.QQ)
+                //context.kill(ShareQQInterceptor.QQ)
             }
+        }
+
+        /**特殊机型*/
+        fun isSpecialModel(): Boolean {
+            return Build.MANUFACTURER.toLowerCase() == "oppo"
         }
     }
 
@@ -128,8 +135,8 @@ class DingDingService : BaseService() {
         } else if (command == CMD_RESET_TIME) {
             resetTime()
 
-            threadRun = true
-            ThreadTick().start()
+//            threadRun = true
+//            ThreadTick().start()
 
             Tip.show("助手挂机中...")
 
@@ -172,6 +179,16 @@ class DingDingService : BaseService() {
             testBuilder.append("是否是节假日:${OCR.isHoliday()}\n")
             testBuilder.append(Root.initImei())
             shareText(testBuilder.toString())
+        } else if (command == TASK_SHARE_TEST_BITMAP) {
+            val testBuilder = StringBuilder()
+            testBuilder.append("正在测试的消息:\n")
+            val nowTime = nowTime().spiltTime()
+            testBuilder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
+            testBuilder.append("${nowTime[3]}:${nowTime[4]}:${nowTime[5]}:${nowTime[6]} ")
+            testBuilder.append("周${nowTime[7]}\n")
+            testBuilder.append("是否是节假日:${OCR.isHoliday()}\n")
+            testBuilder.append(Root.initImei())
+            shareBitmap(testBuilder.toString().toBitmap(this))
         }
     }
 
@@ -359,6 +376,7 @@ class DingDingService : BaseService() {
                     postDelayThread(endTimeDelay, endRunnable)
 
                     if (shareText) {
+                        //1分钟以上才分享
                         if (timeSpan[0] > 60 || timeSpan[1] > 60) {
                             if (isWakeUp) {
                                 builder.append("\n助手已被唤醒.")
@@ -664,7 +682,7 @@ class DingDingService : BaseService() {
                 throw IllegalArgumentException("授权过期,请联系作者.")
             }
 
-            LogFile.timeTick()
+            //LogFile.timeTick()
 
             handler.sendEmptyMessageDelayed(MSG_CHECK_TIME, CHECK_TIME_DELAY)
         } else if (msg.what == MSG_GET_CONFIG) {
@@ -709,6 +727,12 @@ class DingDingService : BaseService() {
     }
 
     fun shareText(text: String) {
+        if (isSpecialModel()) {
+            //特殊机型用图片分享
+            shareBitmap(text.toBitmap(this))
+            return
+        }
+
         if (isStartTimeDo || isEndTimeDo) {
             return
         }
@@ -727,7 +751,7 @@ class DingDingService : BaseService() {
                 val old = DingDingInterceptor.handEvent
                 DingDingInterceptor.handEvent = true
 
-                text.share(this, true)
+                text.share(this, true, !isSpecialModel())
 
 //                UM.shareText(
 //                    MainActivity.activity?.get(),
@@ -737,6 +761,32 @@ class DingDingService : BaseService() {
 
                 gotoMain(old)
             }
+        })
+    }
+
+    fun shareBitmap(bitmap: Bitmap) {
+        if (isStartTimeDo || isEndTimeDo) {
+            return
+        }
+
+        DingDingService.onStartShare(this)
+
+        wakeUpAndUnlock(Runnable {
+
+            val old = DingDingInterceptor.handEvent
+            DingDingInterceptor.handEvent = true
+
+            bitmap.share(this, true, !isSpecialModel())
+
+//            RUtils.shareBitmap(this, bitmap.toBytes(), true)
+
+//                UM.shareImage(
+//                    MainActivity.activity?.get(),
+//                    SHARE_MEDIA.QQ,
+//                    it, R.mipmap.ding_ding_logo, UM.ShareListener()
+//                )
+
+            gotoMain(old)
         })
     }
 
@@ -767,6 +817,8 @@ class DingDingService : BaseService() {
     }
 
     private fun gotoMain(oldHandEvent: Boolean) {
+        ShareQQInterceptor.isForwardClick = false
+
         mainHandler.postDelayed({
 
             if (isStartTimeDo || isEndTimeDo) {
@@ -784,14 +836,14 @@ class DingDingService : BaseService() {
         threadRun = false
     }
 
-    class ThreadTick : Thread() {
-        override fun run() {
-            super.run()
-
-            while (threadRun) {
-                LogFile.threadTick()
-                sleep(1_000)
-            }
-        }
-    }
+//    class ThreadTick : Thread() {
+//        override fun run() {
+//            super.run()
+//
+//            while (threadRun) {
+//                LogFile.threadTick()
+//                sleep(1_000)
+//            }
+//        }
+//    }
 }

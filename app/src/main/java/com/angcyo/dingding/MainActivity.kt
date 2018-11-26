@@ -41,6 +41,8 @@ class MainActivity : BaseAppCompatActivity() {
         var activity: WeakReference<Activity>? = null
     }
 
+    var shareCount = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity = WeakReference(this)
@@ -126,6 +128,7 @@ class MainActivity : BaseAppCompatActivity() {
 
         viewHolder.cb(R.id.keep_box, false, "keep_on") { _, isChecked ->
             window.decorView.keepScreenOn = isChecked
+            Tip.keepScreenOn(isChecked)
         }
 
         RLocalBroadcastManager
@@ -180,7 +183,13 @@ class MainActivity : BaseAppCompatActivity() {
             currentFocus?.clearFocus()
 
             if (Permission.check(this)) {
-                BaseService.start(RApplication.getApp(), DingDingService::class.java, DingDingService.TASK_SHARE_TEST)
+                BaseService.start(
+                    RApplication.getApp(),
+                    DingDingService::class.java,
+                    if (shareCount++ % 2 == 0)
+                        DingDingService.TASK_SHARE_TEST_BITMAP
+                    else DingDingService.TASK_SHARE_TEST
+                )
             }
         }
 

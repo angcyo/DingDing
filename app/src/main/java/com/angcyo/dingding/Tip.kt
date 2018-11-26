@@ -5,6 +5,8 @@ import android.view.View
 import android.widget.TextView
 import com.angcyo.http.Rx
 import com.angcyo.uiview.less.RApplication
+import com.angcyo.uiview.less.kotlin.clickIt
+import com.angcyo.uiview.less.kotlin.runMain
 import com.angcyo.uiview.less.utils.RUtils
 import com.orhanobut.hawk.Hawk
 import com.yhao.floatwindow.FloatWindow
@@ -50,6 +52,9 @@ object Tip {
         }
         view?.let {
             it.findViewById<TextView>(R.id.text_view).text = tip
+            it.clickIt {
+                it.context.runMain()
+            }
         }
     }
 
@@ -58,4 +63,7 @@ object Tip {
         view = null
     }
 
+    fun keepScreenOn(on: Boolean) {
+        view?.keepScreenOn = on
+    }
 }
