@@ -162,7 +162,9 @@ class MainActivity : BaseAppCompatActivity() {
                     DingDingInterceptor.DING_DING.startApp(this)
 
                     viewHolder.postDelay(3 * 1000L) {
-                        runMain()
+                        L.w("runMain")
+
+                        this@MainActivity.runActivity(MainActivity::class.java)
                     }
                 }
             }
