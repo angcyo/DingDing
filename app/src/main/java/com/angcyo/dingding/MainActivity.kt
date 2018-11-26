@@ -256,9 +256,16 @@ class MainActivity : BaseAppCompatActivity() {
         val builder = StringBuilder()
         val km: KeyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         if (km.isKeyguardSecure) {
-            builder.append("取消锁屏密码,可以自动`亮屏``解锁(8.0)`\n")
+            builder.append("接上电源,取消锁屏密码,可以自动`亮屏``解锁(8.0)`\n")
         }
         builder.append("输入`钉钉手机号和密码`,可以自动登录钉钉")
+        builder.append("\n*请关闭锁屏")
+        builder.append("\n*请保持屏幕常亮")
+        builder.append("\n*请接通电源")
+//        builder.append("\n请取消锁屏密码,可以自动亮屏并解锁(如果满足)")
+//        builder.append("\n请把锁屏时间设置成10分钟以上")
+
+        viewHolder.tv(R.id.tip_text_view).text = builder
 
         if (DingDingService.isTaskStart) {
             viewHolder.tv(R.id.start_button).text = "停止挂机"
@@ -268,12 +275,6 @@ class MainActivity : BaseAppCompatActivity() {
             viewHolder.tv(R.id.start_button).text = "开始挂机"
         }
 
-        builder.append("\n*请保持屏幕常亮, 提高成功率")
-        builder.append("\n*锁屏前, 请将程序切换至前台")
-        builder.append("\n请取消锁屏密码,可以自动亮屏并解锁(如果满足)")
-        builder.append("\n请把锁屏时间设置成10分钟以上")
-
-        viewHolder.tv(R.id.tip_text_view).text = builder
     }
 
     fun updateBottomTipTextView(text: String) {
