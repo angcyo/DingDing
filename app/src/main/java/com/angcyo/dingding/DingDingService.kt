@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
+import android.text.TextUtils
 import com.angcyo.lib.L
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.*
@@ -36,6 +37,8 @@ class DingDingService : BaseService() {
         const val CMD_RESET_TIME = 2
         const val CMD_STOP = 3
 
+        const val KEY_SHARE_TEXT = "key_share_text"
+
         /**获取屏幕截图*/
         const val TASK_SHARE_SHOT = 800
         /**立即执行打卡*/
@@ -44,6 +47,7 @@ class DingDingService : BaseService() {
         const val TASK_SHARE_TEST = 802
         /**分享图片测试*/
         const val TASK_SHARE_TEST_BITMAP = 803
+        const val TASK_SHARE_TEST_CUSTOM = 804
 
         @Deprecated("使用定时器控制")
         var run = false
@@ -115,6 +119,14 @@ class DingDingService : BaseService() {
         /**特殊机型*/
         fun isSpecialModel(): Boolean {
             return Build.MANUFACTURER.toLowerCase() == "oppo"
+        }
+
+        fun share(context: Context, text: String) {
+            val intent = Intent(context, DingDingService::class.java)
+            intent.putExtra(KEY_COMMAND, TASK_SHARE_TEST_CUSTOM)
+            intent.putExtra(KEY_SHARE_TEXT, text)
+
+            start(context, intent)
         }
     }
 
@@ -189,6 +201,11 @@ class DingDingService : BaseService() {
             testBuilder.append("是否是节假日:${OCR.isHoliday()}\n")
             testBuilder.append(Root.initImei())
             shareBitmap(testBuilder.toString().toBitmap(this))
+        } else if (command == TASK_SHARE_TEST_CUSTOM) {
+            val text = intent.getStringExtra(KEY_SHARE_TEXT)
+            if (!TextUtils.isEmpty(text)) {
+                shareText(text)
+            }
         }
     }
 
@@ -557,15 +574,14 @@ class DingDingService : BaseService() {
                 spiltTime[3] in (endTimeLong[3] - 1..endTimeLong[3])
             ) {
 
-
                 var pass = false
 
                 if (spiltTime[3] == startTimeLong[3] ||
                     spiltTime[3] == endTimeLong[3]
                 ) {
                     //小时相同
-                    if (spiltTime[4] in (startTimeLong[4] - 10..startTimeLong[4]) ||
-                        spiltTime[4] in (endTimeLong[4] - 10..endTimeLong[4])
+                    if (spiltTime[4] in (startTimeLong[4] - 10..startTimeLong[4] + 10) ||
+                        spiltTime[4] in (endTimeLong[4] - 10..endTimeLong[4] + 10)
                     ) {
                         //上下班前10分钟
                         pass = true

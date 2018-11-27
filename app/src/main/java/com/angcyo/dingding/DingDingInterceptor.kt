@@ -151,6 +151,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 L.i("钉钉首页界面")
                 findBottomRect(accService, findRectByText("工作", accService, event)).let {
                     L.i("工作:$it")
+
+                    LogFile.touch("find 工作 Tab $it")
+
                     if (!it.isEmpty) {
                         val nowTime = nowTime()
 
@@ -242,12 +245,15 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             LogFile.acc("屏幕大小:$realRect  开始滚动:$y1 -> $y2")
 
             Tip.show("开始滚动:$y1 -> $y2")
+
+            LogFile.touch("屏幕大小:$realRect  开始滚动:$y1 -> $y2")
         }, object : GestureCallback() {
             override fun onEnd(gestureDescription: GestureDescription?) {
                 super.onEnd(gestureDescription)
 
                 LogFile.acc("滚动结束")
                 L.i("滚动结束")
+                LogFile.touch("滚动结束")
 
                 searchScreenWords {
                     it?.let {
@@ -256,6 +262,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         it.getRectByWord("勤打卡").let {
 
                             LogFile.acc("查找 `勤打卡` 坐标. $it")
+                            LogFile.touch("查找 `勤打卡` 坐标. $it")
 
                             if (it.isEmpty) {
                                 delay(HTTP_DELAY) {
@@ -337,8 +344,11 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         searchScreenWords {
             it?.let { wordBean ->
                 var haveCard = false
+                var isGoWork = false //上班打卡,成功后 对话框会翻转..延迟到翻转后
                 wordBean.getRectByWord("下班打卡").let {
                     L.i("下班打卡:$it")
+                    LogFile.touch("下班打卡:$it")
+
                     if (!it.isEmpty) {
                         haveCard = true
 
@@ -346,13 +356,19 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     } else {
                         wordBean.getRectByWord("上班打卡").let {
                             L.i("上班打卡:$it")
+                            LogFile.touch("上班打卡:$it")
+
                             if (!it.isEmpty) {
                                 haveCard = true
+                                isGoWork = true
 
                                 accService.touch(it.toPath())
                             } else {
                                 wordBean.getRectByWord("更新打卡").let {
                                     L.i("更新打卡:$it")
+
+                                    LogFile.touch("更新打卡:$it")
+
                                     if (!it.isEmpty) {
                                         haveCard = true
 
@@ -360,6 +376,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                     } else {
                                         wordBean.getRectByWord("外勤打卡").let {
                                             L.i("外勤打卡:$it")
+                                            LogFile.touch("外勤打卡:$it")
+
                                             if (!it.isEmpty) {
                                                 Tip.show("请前往公司再打卡")
 
@@ -377,11 +395,16 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 }
 
                 if (haveCard) {
-                    //判断早退
                     Tip.show("确定打卡是否成功.")
 
                     //打卡结果页识别
-                    checkCardReult(accService)
+                    if (isGoWork) {
+                        delay(3_000) {
+                            checkCardReult(accService)
+                        }
+                    } else {
+                        checkCardReult(accService)
+                    }
                 } else {
                     //没有找到
                     if (retryCount <= 0) {
@@ -413,6 +436,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 it?.let { wordBean ->
                     wordBean.getRectByWord("上班打卡成功").apply {
                         L.i("上班打卡成功:$this")
+                        LogFile.touch("上班打卡成功:$this")
+
                         if (!this.isEmpty) {
                             Tip.show("上班打卡成功.")
 
@@ -420,6 +445,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             delay(HTTP_DELAY) {
                                 searchScreenWords {
                                     wordBean.getRectByWord("我知道了").let {
+
+                                        LogFile.touch("我知道了:$it")
+
                                         if (!it.isEmpty) {
                                             accService.touch(it.toPath())
 
@@ -448,11 +476,15 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                     wordBean.getRectByWord("下班打卡成功").apply {
                         L.i("下班打卡成功:$this")
+                        LogFile.touch("下班打卡成功:$this")
 
                         if (!this.isEmpty) {
                             Tip.show("下班打卡成功.")
 
                             wordBean.getRectByWord("我知道了").let {
+
+                                LogFile.touch("我知道了:$it")
+
                                 if (!it.isEmpty) {
                                     accService.touch(it.toPath())
 
@@ -509,6 +541,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     wordBean.getRectByWord("我知道了").let {
                         L.i("我知道了:$it")
 
+                        LogFile.touch("对话框 我知道了:$it")
+
                         if (!it.isEmpty) {
                             accService.touch(it.toPath())
 
@@ -551,22 +585,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         }
                     }
 
-                    //对话框
-                    wordBean.getRectByWord("我知道了").let {
-                        L.i("我知道了:$it")
-
-                        if (!it.isEmpty) {
-                            accService.touch(it.toPath())
-
-                            shareQQ(accService)
-
-                            isCheckCardUI = false
-                            return@searchScreenWords
-                        }
-                    }
-
                     //上班打卡 分享对话框 取消分享
                     wordBean.getRectByWord("取消分享").let {
+                        LogFile.touch("对话框 取消分享:$it")
 
                         if (!it.isEmpty) {
                             accService.touch(it.toPath())
@@ -682,16 +703,21 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         delay(1_000) {
                             Tip.show("恭喜,流程结束!.")
 
+                            LogFile.log("恭喜,流程结束!.")
+
                             isCheckCardUI = false
                             DingDingService.isStartTimeDo = false
                             DingDingService.isEndTimeDo = false
                             accService.runMain()
+
+                            DingDingService.share(accService, "打卡流程已结束, 请登录钉钉查看结果.")
                         }
                     }
                 }
             }
         }
     }
+
 
 //com.alibaba.android.rimet
 //com.alibaba.lightapp.runtime.activity.CommonWebViewActivity

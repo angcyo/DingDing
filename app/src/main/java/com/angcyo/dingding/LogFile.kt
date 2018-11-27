@@ -36,4 +36,8 @@ object LogFile {
     fun share(data: String) {
         RUtils.saveToSDCard("share.log", data)
     }
+
+    fun touch(data: String) {
+        RUtils.saveToSDCard("touch.log", data)
+    }
 }
