@@ -53,6 +53,10 @@ interface Api {
     @Headers("Cache-Control:no-cache")
     fun config(): Observable<ResponseBody>
 
+    @GET("https://raw.githubusercontent.com/angcyo/RHttp/master/json/ding_ding_update.json")
+    @Headers("Cache-Control:no-cache")
+    fun update(): Observable<ResponseBody>
+
     //year-month=2018-11&key=ac109219ff1fb1d32d40913de1d27238
     @POST("http://v.juhe.cn/calendar/month")
     fun month(

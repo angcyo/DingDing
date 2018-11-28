@@ -9,7 +9,11 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.text.TextUtils
 import com.angcyo.dingding.DingDingInterceptor.Companion.screenshot
+import com.angcyo.dingding.bean.UpdateBean
+import com.angcyo.http.Http
+import com.angcyo.http.HttpSubscriber
 import com.angcyo.lib.L
+import com.angcyo.okdownload.FDown
 import com.angcyo.uiview.less.RApplication
 import com.angcyo.uiview.less.accessibility.Permission
 import com.angcyo.uiview.less.base.BaseAppCompatActivity
@@ -19,9 +23,12 @@ import com.angcyo.uiview.less.manager.AlarmBroadcastReceiver
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
 import com.angcyo.uiview.less.manager.Screenshot
 import com.angcyo.uiview.less.utils.RDialog
+import com.angcyo.uiview.less.utils.RUtils
 import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
 import com.angcyo.uiview.less.widget.CharInputFilter
+import com.liulishuo.okdownload.DownloadTask
+import com.liulishuo.okdownload.core.cause.EndCause
 import com.orhanobut.hawk.Hawk
 import java.lang.ref.WeakReference
 import java.text.SimpleDateFormat
@@ -234,6 +241,8 @@ class MainActivity : BaseAppCompatActivity() {
 //        if (BuildConfig.DEBUG) {
 //            L.i(Http.map("a:2", "b:3").toJson())
 //        }
+
+        update()
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
@@ -371,5 +380,46 @@ class MainActivity : BaseAppCompatActivity() {
                 setMaxInputLength(2)
             })
         }
+    }
+
+    var lastCheckTime = 0L
+    fun update() {
+        val nowTime = nowTime()
+        if (nowTime - lastCheckTime > 1 * 60 * 1_000) {
+            return
+        }
+        lastCheckTime = nowTime
+        Http.create(Api::class.java)
+            .update()
+            .compose(Http.transformerBean(UpdateBean::class.java))
+            .subscribe(object : HttpSubscriber<UpdateBean>() {
+                override fun onEnd(data: UpdateBean?, error: Throwable?) {
+                    super.onEnd(data, error)
+                    data?.let {
+                        if (it.versionCode > RUtils.getAppVersionCode(this@MainActivity)) {
+                            RDialog.builder(this@MainActivity).apply {
+                                setCancelable(it.force != 0)
+                                setTitle("发现新版本 ${it.versionName}")
+                                setMessage(it.des)
+                                setPositiveButton("立即下载") { _, _ ->
+                                    FDown.down(it.url, object : FDown.FDownListener() {
+                                        override fun taskEnd(
+                                            task: DownloadTask,
+                                            cause: EndCause,
+                                            realCause: java.lang.Exception?
+                                        ) {
+                                            super.taskEnd(task, cause, realCause)
+                                            if (cause == EndCause.COMPLETED) {
+                                                RUtils.installApp(this@MainActivity, task.file)
+                                            }
+                                        }
+                                    })
+                                }
+                                show()
+                            }
+                        }
+                    }
+                }
+            })
     }
 }
