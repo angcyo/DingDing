@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Message
@@ -326,6 +327,7 @@ class DingDingService : BaseService() {
                 builder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
                 builder.append("周${nowTime[7]}\n")
                 builder.append("今天放假哦 ^_^ T_T")
+                builder.append("\n电量 ${getBattery()}%")
 
                 if (isWakeUp) {
                     builder.append("\n助手已被唤醒.")
@@ -388,6 +390,7 @@ class DingDingService : BaseService() {
                 } else {
                     val endTimeDelay = timeSpan[1].absoluteValue * 1_000L
                     builder.append("下班任务($endTime)定时在 ${RUtils.formatTime(endTimeDelay)} 后.")
+                    builder.append("\n电量 ${getBattery()}%")
 
                     RAlarmManager.setDelay(this, endTimeDelay, endPendingIntent!!)
                     postDelayThread(endTimeDelay, endRunnable)
@@ -726,6 +729,7 @@ class DingDingService : BaseService() {
             }
             shareTextBuilder.append("\n上班 $startTime")
             shareTextBuilder.append("\n下班 $endTime")
+            shareTextBuilder.append("\n电量 ${getBattery()}%")
 
             if (heart) {
                 shareTextBuilder.append("\n助手还活着请放心.")
@@ -836,13 +840,13 @@ class DingDingService : BaseService() {
         ShareQQInterceptor.isForwardClick = false
 
         mainHandler.postDelayed({
+            DingDingInterceptor.handEvent = oldHandEvent
 
             if (isStartTimeDo || isEndTimeDo) {
                 return@postDelayed
             }
 
             runMain()
-            DingDingInterceptor.handEvent = oldHandEvent
         }, 5_000)
     }
 
@@ -850,6 +854,12 @@ class DingDingService : BaseService() {
         super.onDestroy()
         LogFile.log("打卡服务:onDestroy")
         threadRun = false
+    }
+
+    fun getBattery(): Int {
+        val batteryManager = getSystemService(BATTERY_SERVICE) as BatteryManager
+        val battery = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
+        return battery
     }
 
 //    class ThreadTick : Thread() {

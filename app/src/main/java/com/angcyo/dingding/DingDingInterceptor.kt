@@ -61,6 +61,9 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             screenshot?.startToShot()
             onCaptureEnd = end
         }
+
+        /**打卡命中按钮提示*/
+        val accCardStringBuilder = StringBuilder()
     }
 
     var filterEven = FilterEven(
@@ -191,6 +194,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 //                            accService.kill(ShareQQInterceptor.QQ)
 //                        }
                             isCheckCardUI = true
+                            DingDingInterceptor.accCardStringBuilder.clear()
                             clickCard(accService)
 //                        back(accService)
                         }
@@ -348,6 +352,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                 wordBean.getRectByWord("下班打卡").let {
                     L.i("下班打卡:$it")
                     LogFile.touch("下班打卡:$it")
+                    accCardStringBuilder.append("下班打卡:$it\n")
 
                     if (!it.isEmpty) {
                         haveCard = true
@@ -357,6 +362,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         wordBean.getRectByWord("上班打卡").let {
                             L.i("上班打卡:$it")
                             LogFile.touch("上班打卡:$it")
+                            accCardStringBuilder.append("上班打卡:$it\n")
 
                             if (!it.isEmpty) {
                                 haveCard = true
@@ -369,6 +375,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                                     LogFile.touch("更新打卡:$it")
 
+                                    accCardStringBuilder.append("更新打卡:$it\n")
+
                                     if (!it.isEmpty) {
                                         haveCard = true
 
@@ -377,6 +385,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                                         wordBean.getRectByWord("外勤打卡").let {
                                             L.i("外勤打卡:$it")
                                             LogFile.touch("外勤打卡:$it")
+
+                                            accCardStringBuilder.append("外勤打卡:$it\n")
 
                                             if (!it.isEmpty) {
                                                 Tip.show("请前往公司再打卡")
@@ -701,7 +711,6 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                         Tip.show("回退结束.")
 
                         delay(1_000) {
-                            Tip.show("恭喜,流程结束!.")
 
                             LogFile.log("恭喜,流程结束!.")
 
@@ -710,7 +719,11 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             DingDingService.isEndTimeDo = false
                             accService.runMain()
 
-                            DingDingService.share(accService, "打卡流程已结束, 请登录钉钉查看结果.")
+                            DingDingService.share(accService, "$accCardStringBuilder\n打卡结束, 请登录钉钉查看准确结果.")
+
+                            delay(2_000) {
+                                Tip.show("恭喜,流程结束!.")
+                            }
                         }
                     }
                 }
