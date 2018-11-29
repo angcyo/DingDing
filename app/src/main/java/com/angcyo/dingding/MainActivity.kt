@@ -63,6 +63,7 @@ class MainActivity : BaseAppCompatActivity() {
         viewHolder.exV(R.id.share_qq_view).setInputText(Hawk.get("share_qq", "我的电脑"))
         viewHolder.exV(R.id.baidu_ak_view).setInputText(Hawk.get("baidu_ak", ""))
         viewHolder.exV(R.id.baidu_sk_view).setInputText(Hawk.get("baidu_sk", ""))
+        viewHolder.exV(R.id.pass_date_edit).setInputText(OCR.passDate)
         updateDelayTime()
 
         //viewHolder.exV(R.id.ding_pw_view).requestFocus()
@@ -96,6 +97,7 @@ class MainActivity : BaseAppCompatActivity() {
                 Hawk.put("ding_user", "${viewHolder.tv(R.id.ding_user_view).text}")
                 Hawk.put("ding_pw", "${viewHolder.tv(R.id.ding_pw_view).text}")
                 Hawk.put("share_qq", "${viewHolder.tv(R.id.share_qq_view).text}")
+                OCR.passDate = "${viewHolder.tv(R.id.pass_date_edit).text}"
                 Hawk.put("baidu_ak", "$ak")
                 Hawk.put("baidu_sk", "$sk")
 
@@ -236,7 +238,7 @@ class MainActivity : BaseAppCompatActivity() {
         viewHolder.tv(R.id.device_tip_text_view).text = Root.device_info(this)
 
         val spiltTime = nowTime().spiltTime()
-        L.i("今天周:${spiltTime[7]} 节假日:${OCR.isHoliday()}")
+        L.i("今天周:${spiltTime[7]} 节假日:${OCR.isHoliday()} 跳过日期:${OCR.isPassDate()}")
 
 //        if (BuildConfig.DEBUG) {
 //            L.i(Http.map("a:2", "b:3").toJson())

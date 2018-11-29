@@ -192,7 +192,7 @@ class DingDingService : BaseService() {
             testBuilder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
             testBuilder.append("${nowTime[3]}:${nowTime[4]}:${nowTime[5]}:${nowTime[6]} ")
             testBuilder.append("周${nowTime[7]}\n")
-            testBuilder.append("是否是节假日:${OCR.isHoliday()}\n")
+            testBuilder.append("是否是节假日:${OCR.isHoliday()} 跳过日期:${OCR.isPassDate()}\n")
             testBuilder.append(Root.initImei())
             shareText(testBuilder.toString())
         } else if (command == TASK_SHARE_TEST_BITMAP) {
@@ -202,7 +202,7 @@ class DingDingService : BaseService() {
             testBuilder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
             testBuilder.append("${nowTime[3]}:${nowTime[4]}:${nowTime[5]}:${nowTime[6]} ")
             testBuilder.append("周${nowTime[7]}\n")
-            testBuilder.append("是否是节假日:${OCR.isHoliday()}\n")
+            testBuilder.append("是否是节假日:${OCR.isHoliday()} 跳过日期:${OCR.isPassDate()}\n")
             testBuilder.append(Root.initImei())
             shareBitmap(testBuilder.toString().toBitmap(this))
         } else if (command == TASK_SHARE_TEST_CUSTOM) {
@@ -281,7 +281,7 @@ class DingDingService : BaseService() {
         //几号
         lastDay = spiltTime[2]
 
-        LogFile.log("设置在: $startTime  $endTime  节假日:${OCR.isHoliday()}")
+        LogFile.log("设置在: $startTime  $endTime  节假日:${OCR.isHoliday()} 跳过日期:${OCR.isPassDate()}")
 
         RLocalBroadcastManager.sendBroadcast(MainActivity.UPDATE_TIME)
         OCR.month()
@@ -320,16 +320,21 @@ class DingDingService : BaseService() {
         removeDelayThread(startRunnable)
         removeDelayThread(endRunnable)
 
-        if (OCR.isHoliday() && !debugRun) {
+        if ((OCR.isHoliday() || OCR.isPassDate()) && !debugRun) {
             //节假日
-
             if (shareText) {
                 val builder = StringBuilder()
 
                 val nowTime = nowTime().spiltTime()
                 builder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
                 builder.append("周${nowTime[7]}\n")
-                builder.append("今天放假哦 ^_^ T_T")
+
+                if (OCR.isPassDate()) {
+                    builder.append("需要跳过的日期 ^_^ T_T")
+                } else {
+                    builder.append("今天放假哦 ^_^ T_T")
+                }
+
                 builder.append("\n电量 ${getBattery()}%")
 
                 if (isWakeUp) {
@@ -426,13 +431,17 @@ class DingDingService : BaseService() {
             return
         }
 
-        if (OCR.isHoliday()) {
+        if (OCR.isHoliday() || OCR.isPassDate()) {
             //节假日
             val nowTime = nowTime().spiltTime()
             spanBuilder.append("${nowTime[0]}-${nowTime[1]}-${nowTime[2]} ")
             spanBuilder.append("周${nowTime[7]}\n")
 
-            spanBuilder.append("今天放假哦 ^_^ T_T")
+            if (OCR.isPassDate()) {
+                spanBuilder.append("需要跳过的日期 ^_^ T_T")
+            } else {
+                spanBuilder.append("今天放假哦 ^_^ T_T")
+            }
         } else {
             val timeSpan = calcTimeSpan()
 

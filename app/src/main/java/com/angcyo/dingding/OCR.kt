@@ -11,6 +11,7 @@ import com.angcyo.uiview.less.RApplication
 import com.angcyo.uiview.less.base.BaseService
 import com.angcyo.uiview.less.kotlin.*
 import com.angcyo.uiview.less.manager.RLocalBroadcastManager
+import com.angcyo.uiview.less.utils.RUtils
 import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
 import com.orhanobut.hawk.Hawk
@@ -38,6 +39,12 @@ object OCR {
         get() = Hawk.get("ocr_count", 0)
         set(value) {
             Hawk.put("ocr_count", value)
+        }
+
+    var passDate: String
+        get() = Hawk.get("pass_date", "")
+        set(value) {
+            Hawk.put("pass_date", value)
         }
 
     fun init() {
@@ -245,10 +252,26 @@ object OCR {
         return isHoliday(time.parseTime())
     }
 
+    fun isPassDate(time: Long = System.currentTimeMillis()): Boolean {
+        var isPass = false //强制跳过日期
+
+        val nowTime = time.spiltTime()
+
+        val yyyyMMdd = "${nowTime[0]}-${nowTime[1]}-${nowTime[2]}"
+
+        for (date in RUtils.split(passDate, " ")) {
+            if (yyyyMMdd == date) {
+                isPass = true
+                break
+            }
+        }
+        return isPass
+    }
+
     /**判断今天是否是节假日, 或者是周六周末*/
     fun isHoliday(time: Long = System.currentTimeMillis()): Boolean {
         var isHoliday = false//节假日
-        var isCease = false
+        var isCease = false //双休
 
         val nowTime = time.spiltTime()
 

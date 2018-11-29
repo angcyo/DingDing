@@ -89,7 +89,7 @@
             <LinearLayout
                     android:orientation="horizontal"
                     android:layout_width="match_parent"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="2dp"
                     android:layout_height="wrap_content">
 
                 <android.support.design.widget.TextInputLayout
@@ -143,7 +143,7 @@
             </LinearLayout>
 
             <TextView
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="2dp"
                     android:text="请确保联系人在`最近联系人`界面中"
                     style="@style/BaseDarkTextStyle"
                     android:layout_width="wrap_content"
@@ -166,7 +166,7 @@
 
             <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="2dp"
                     android:layout_height="wrap_content">
 
                 <com.angcyo.uiview.less.widget.ExEditText
@@ -181,12 +181,27 @@
 
             <android.support.design.widget.TextInputLayout
                     android:layout_width="match_parent"
-                    android:layout_marginTop="10dp"
+                    android:layout_marginTop="2dp"
                     android:layout_height="wrap_content">
 
                 <com.angcyo.uiview.less.widget.ExEditText
                         android:id="@+id/baidu_sk_view"
                         android:hint="百度OCR Secret Key"
+                        android:inputType="text"
+                        android:layout_width="match_parent"
+                        style="@style/BaseDarkTextStyle"
+                        android:layout_height="wrap_content"/>
+
+            </android.support.design.widget.TextInputLayout>
+
+            <android.support.design.widget.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="2dp"
+                    android:layout_height="wrap_content">
+
+                <com.angcyo.uiview.less.widget.ExEditText
+                        android:id="@+id/pass_date_edit"
+                        android:hint="跳过日期(如 2018-9-20 多个用空格隔开)"
                         android:inputType="text"
                         android:layout_width="match_parent"
                         style="@style/BaseDarkTextStyle"
