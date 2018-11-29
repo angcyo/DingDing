@@ -385,7 +385,7 @@ class MainActivity : BaseAppCompatActivity() {
     var lastCheckTime = 0L
     fun update() {
         val nowTime = nowTime()
-        if (nowTime - lastCheckTime > 1 * 60 * 1_000) {
+        if (nowTime - lastCheckTime < 1 * 60 * 1_000) {
             return
         }
         lastCheckTime = nowTime
