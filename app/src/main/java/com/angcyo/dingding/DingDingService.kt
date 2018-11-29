@@ -138,6 +138,7 @@ class DingDingService : BaseService() {
     override fun onHandCommand(command: Int, intent: Intent) {
         super.onHandCommand(command, intent)
         Tip.show("执行命令:$command")
+        LogFile.log("执行命令:$command")
 
         if (command == CMD_TO_DING_DING) {
             RLocalBroadcastManager.sendBroadcast(
@@ -178,6 +179,8 @@ class DingDingService : BaseService() {
                 Bundle().apply { putString("text", "欢迎下次使用.") })
 
             Tip.hide()
+
+            LogFile.log("助手已被手动停止.")
         } else if (command == TASK_SHARE_SHOT) {
             shareScreenshot()
         } else if (command == TASK_JUST_DING) {
@@ -741,8 +744,7 @@ class DingDingService : BaseService() {
                 shareText(shareTextBuilder.toString())
             }
 
-            LogFile.log("心跳:$heart")
-            LogFile.log("上班 $startTime  下班 $endTime")
+            LogFile.log("$shareTextBuilder")
         })
     }
 
