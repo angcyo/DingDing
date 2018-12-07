@@ -64,6 +64,15 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
         /**打卡命中按钮提示*/
         val accCardStringBuilder = StringBuilder()
+
+        /**登录次数, 打卡期内, 只登陆2次*/
+        var loginCount
+            get() = Hawk.get("login_count", 0)
+            set(value) {
+                Hawk.put("login_count", value)
+            }
+
+        var lastIsLoginActivity = false
     }
 
     var filterEven = FilterEven(
@@ -121,8 +130,17 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             }
 
             if (isLoginActivity(event)) {
-                L.i("钉钉登录界面")
+                lastIsLoginActivity = true
+
+                val currentLoginCount = DingDingInterceptor.loginCount
+                if (currentLoginCount >= 2) {
+                    Tip.show("登录次数超限")
+                    LogFile.log("登录次数超限:$currentLoginCount")
+                    return
+                }
+
                 Tip.show("即将为您登录")
+                LogFile.log("即将为您登录")
 
                 findNodeById("et_phone_input", accService, event).let {
                     L.i("手机输入:${it.size}")
@@ -148,9 +166,13 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                     } else {
                         it.first().click()
+
+                        DingDingInterceptor.loginCount = currentLoginCount + 1
                     }
                 }
             } else if (isMainActivity(accService, event)) {
+                lastIsLoginActivity = false
+
                 L.i("钉钉首页界面")
                 findBottomRect(accService, findRectByText("工作", accService, event)).let {
                     L.i("工作:$it")
@@ -179,6 +201,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                     }
                 }
             } else if ("com.alibaba.lightapp.runtime.activity.CommonWebViewActivity" == event.className) {
+                lastIsLoginActivity = false
+
                 //网页浏览界面 打卡界面就是网页
                 Tip.show("检查是否是打卡页面.")
 
@@ -215,6 +239,11 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
 
     fun jumpToDingCardActivity(accService: BaseAccessibilityService, retryCount: Int = 3) {
+        if (lastIsLoginActivity) {
+            LogFile.acc("被踢出登录界面.")
+            return
+        }
+
         if (!lastAppIsDingDing()) {
             L.i("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
             Tip.show("请回到钉钉首页.")

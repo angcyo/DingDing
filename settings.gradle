@@ -1,5 +1,5 @@
 include ':app'
 
-include ':lib', ':uiviewless', ':http'
+include ':lib', ':UIViewLess', ':http'
 
 include ':umeng'

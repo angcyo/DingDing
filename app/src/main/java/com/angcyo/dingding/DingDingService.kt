@@ -263,6 +263,8 @@ class DingDingService : BaseService() {
 
         isTaskStart = true
 
+        DingDingInterceptor.loginCount = 0
+
         val delayMillis = defaultDelayTime.toInt() * 60 * 1000L
         val delayStart = nextInt(defaultDelayTime.toInt()) * 60 * 1000L
         val delayEnd = nextInt(defaultDelayTime.toInt()) * 60 * 1000L
@@ -603,8 +605,11 @@ class DingDingService : BaseService() {
                     }
                 }
 
+                val timeSpan = calcTimeSpan()
                 val nowTime = nowTime()
-                if (nowTime - lastHitTime >= 30 * 60 * 1000L) {
+                if (timeSpan[1] > 0 /*还没有下班*/
+                    && nowTime - lastHitTime >= 30 * 60 * 1000L
+                ) {
                     //30分钟通知一次
 
                     //上下班打卡快到时, 唤醒屏幕. 增加 handler延迟的命中率
