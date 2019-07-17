@@ -271,7 +271,7 @@ class MainActivity : BaseAppCompatActivity() {
         if (km.isKeyguardSecure) {
             builder.append("接上电源,取消锁屏密码,可以自动`亮屏``解锁(8.0)`\n")
         }
-        builder.append("输入`钉钉手机号和密码`,可以自动登录钉钉")
+        builder.append("输入`挂机手机号和密码`,可以自动登录挂机")
         builder.append("\n*请关闭锁屏")
         builder.append("\n*请保持屏幕常亮")
         builder.append("\n*请接通电源")

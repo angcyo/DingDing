@@ -554,10 +554,10 @@ class DingDingService : BaseService() {
     }
 
     fun toDingDing() {
-        LogFile.log("启动钉钉 唤醒屏幕")
+        LogFile.log("启动挂机 唤醒屏幕")
 
         wakeUpAndUnlock(Runnable {
-            LogFile.log("启动钉钉 唤醒屏幕2")
+            LogFile.log("启动挂机 唤醒屏幕2")
 
             DingDingInterceptor.handEvent = true
             RUtils.startApp(this, DingDingInterceptor.DING_DING)

@@ -33,7 +33,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
         var onSearchWordEnd: ((WordBean?) -> Unit)? = null
 
-        /*钉钉网络请求延迟操作时间*/
+        /*挂机网络请求延迟操作时间*/
         var HTTP_DELAY = 2_000L
         /*分享图片延迟*/
         var SHARE_DELAY = 10_000L
@@ -173,7 +173,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
             } else if (isMainActivity(accService, event)) {
                 lastIsLoginActivity = false
 
-                L.i("钉钉首页界面")
+                L.i("挂机首页界面")
                 findBottomRect(accService, findRectByText("工作", accService, event)).let {
                     L.i("工作:$it")
 
@@ -245,10 +245,10 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
         }
 
         if (!lastAppIsDingDing()) {
-            L.i("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
-            Tip.show("请回到钉钉首页.")
+            L.i("请回到挂机首页1 last:${BaseAccessibilityService.lastPackageName}")
+            Tip.show("请回到挂机首页.")
 
-            LogFile.acc("请回到钉钉首页1 last:${BaseAccessibilityService.lastPackageName}")
+            LogFile.acc("请回到挂机首页1 last:${BaseAccessibilityService.lastPackageName}")
             return
         }
         if (retryCount <= 0) {
@@ -300,10 +300,10 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             if (it.isEmpty) {
                                 delay(HTTP_DELAY) {
                                     if (!lastAppIsDingDing()) {
-                                        L.i("请回到钉钉首页2 last:${BaseAccessibilityService.lastPackageName}")
-                                        Tip.show("请回到钉钉首页.")
+                                        L.i("请回到挂机首页2 last:${BaseAccessibilityService.lastPackageName}")
+                                        Tip.show("请回到挂机首页.")
 
-                                        LogFile.acc("请回到钉钉首页2 last:${BaseAccessibilityService.lastPackageName}")
+                                        LogFile.acc("请回到挂机首页2 last:${BaseAccessibilityService.lastPackageName}")
                                     } else {
                                         jumpToDingCardActivity(accService, retryCount - 1)
                                     }
@@ -315,10 +315,10 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
 
                                     accService.touch(it.toPath())
                                 } else {
-                                    L.i("请回到钉钉首页3, last:${BaseAccessibilityService.lastPackageName}")
-                                    Tip.show("请回到钉钉首页")
+                                    L.i("请回到挂机首页3, last:${BaseAccessibilityService.lastPackageName}")
+                                    Tip.show("请回到挂机首页")
 
-                                    LogFile.acc("请回到钉钉首页3 last:${BaseAccessibilityService.lastPackageName}")
+                                    LogFile.acc("请回到挂机首页3 last:${BaseAccessibilityService.lastPackageName}")
                                 }
                             }
                         }
@@ -365,8 +365,8 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
      * */
     fun clickCard(accService: BaseAccessibilityService, retryCount: Int = 3) {
         if (!lastAppIsDingDing()) {
-            L.i("请回到钉钉打卡界面 ${BaseAccessibilityService.lastPackageName}")
-            LogFile.log("请回到钉钉打卡界面 ${BaseAccessibilityService.lastPackageName}")
+            L.i("请回到挂机打卡界面 ${BaseAccessibilityService.lastPackageName}")
+            LogFile.log("请回到挂机打卡界面 ${BaseAccessibilityService.lastPackageName}")
 
             isCheckCardUI = false
             return
@@ -725,7 +725,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
     fun back(accService: BaseAccessibilityService) {
         handEvent = false
         isBack = true
-        Tip.show("开始回退钉钉界面")
+        Tip.show("开始回退挂机界面")
 
         delay(300) {
             accService.back()
@@ -748,7 +748,7 @@ class DingDingInterceptor(context: Context) : AccessibilityInterceptor() {
                             DingDingService.isEndTimeDo = false
                             accService.runMain()
 
-                            DingDingService.share(accService, "$accCardStringBuilder\n打卡结束, 请登录钉钉查看准确结果.")
+                            DingDingService.share(accService, "$accCardStringBuilder\n打卡结束, 请登录挂机查看准确结果.")
 
                             delay(2_000) {
                                 Tip.show("恭喜,流程结束!.")
