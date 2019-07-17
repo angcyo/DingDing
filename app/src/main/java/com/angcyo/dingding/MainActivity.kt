@@ -399,11 +399,12 @@ class MainActivity : BaseAppCompatActivity() {
                     super.onEnd(data, error)
                     data?.let {
                         if (it.versionCode > RUtils.getAppVersionCode(this@MainActivity)) {
-                            RDialog.builder(this@MainActivity).apply {
+                            RDialog.build(this@MainActivity).apply {
                                 setCancelable(it.force != 0)
-                                setTitle("发现新版本 ${it.versionName}")
-                                setMessage(it.des)
-                                setPositiveButton("立即下载") { _, _ ->
+                                setDialogTitle("发现新版本 ${it.versionName}")
+                                setDialogMessage(it.des)
+                                setPositiveButtonText("立即下载")
+                                setPositiveButtonListener { _, _ ->
                                     FDown.down(it.url, object : FDown.FDownListener() {
                                         override fun taskEnd(
                                             task: DownloadTask,
@@ -416,8 +417,8 @@ class MainActivity : BaseAppCompatActivity() {
                                             }
                                         }
                                     })
-                                }
-                                show()
+                                  }
+                                showCompatDialog()
                             }
                         }
                     }
