@@ -26,6 +26,7 @@ import com.angcyo.uiview.less.utils.RDialog
 import com.angcyo.uiview.less.utils.RUtils
 import com.angcyo.uiview.less.utils.Root
 import com.angcyo.uiview.less.utils.T_
+import com.angcyo.uiview.less.utils.utilcode.utils.AppUtils
 import com.angcyo.uiview.less.widget.CharInputFilter
 import com.liulishuo.okdownload.DownloadTask
 import com.liulishuo.okdownload.core.cause.EndCause
@@ -46,6 +47,8 @@ class MainActivity : BaseAppCompatActivity() {
         //本设备停止使用
         const val SOFT_STOP = "SOFT_STOP"
         var activity: WeakReference<Activity>? = null
+
+        const val ALLOW_DEVICES = "99173d07-91b6-4c54-b26d-50486ad7e4d2"
     }
 
     var shareCount = 0
@@ -83,6 +86,12 @@ class MainActivity : BaseAppCompatActivity() {
             val sk = "${viewHolder.tv(R.id.baidu_sk_view).text.trim()}"
             if (TextUtils.isEmpty(ak) || TextUtils.isEmpty(sk)) {
                 T_.error("请申请百度云OCR")
+                return@click
+            }
+
+            //检查是否安装apk
+            if (!AppUtils.isInstallApp(this, DingDingInterceptor.DING_DING)) {
+                RUtils.jumpToMarket(this, DingDingInterceptor.DING_DING)
                 return@click
             }
 
@@ -271,7 +280,7 @@ class MainActivity : BaseAppCompatActivity() {
         if (km.isKeyguardSecure) {
             builder.append("接上电源,取消锁屏密码,可以自动`亮屏``解锁(8.0)`\n")
         }
-        builder.append("输入`挂机手机号和密码`,可以自动登录挂机")
+        builder.append("输入`钉钉手机号和密码`,可以自动登录钉钉")
         builder.append("\n*请关闭锁屏")
         builder.append("\n*请保持屏幕常亮")
         builder.append("\n*请接通电源")
@@ -417,7 +426,7 @@ class MainActivity : BaseAppCompatActivity() {
                                             }
                                         }
                                     })
-                                  }
+                                }
                                 showCompatDialog()
                             }
                         }

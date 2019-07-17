@@ -272,12 +272,14 @@
                         android:layout_gravity="center_horizontal"
                         android:text="开始挂机"
                         android:textSize="@dimen/base_title_size"
+                        app:r_button_style="ROUND_GRADIENT_RECT"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"/>
 
                 <com.angcyo.uiview.less.widget.Button
                         android:id="@+id/test_button"
                         android:layout_marginLeft="4dp"
+                        app:r_button_style="ROUND_GRADIENT_RECT"
                         app:layout_constraintLeft_toRightOf="@id/start_button"
                         app:layout_constraintRight_toLeftOf="@id/test_share_button"
                         android:layout_gravity="center_horizontal"
@@ -289,6 +291,7 @@
                 <com.angcyo.uiview.less.widget.Button
                         android:id="@+id/test_share_button"
                         android:layout_marginLeft="4dp"
+                        app:r_button_style="ROUND_GRADIENT_RECT"
                         app:layout_constraintLeft_toRightOf="@id/test_button"
                         app:layout_constraintRight_toRightOf="parent"
                         android:layout_gravity="center_horizontal"

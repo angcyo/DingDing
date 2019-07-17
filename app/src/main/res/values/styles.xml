@@ -8,9 +8,9 @@
         <item name="colorAccent">@color/colorAccent</item>
 
         <item name="defaultButtonStyle">@style/BaseSkinButtonLittleStyle</item>
-        <item name="android:windowBackground">@color/colorPrimary</item>
+        <item name="android:windowBackground">@color/base_white</item>
         <item name="android:navigationBarColor">@color/colorPrimary</item>
-        <!--<item name="android:statusBarColor">@android:color/transparent</item>-->
+        <item name="android:statusBarColor">@color/base_white</item>
 
         <!--<item name="windowActionBar">false</item>-->
         <!--<item name="windowNoTitle">true</item>-->

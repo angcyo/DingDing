@@ -1,6 +1,7 @@
 package com.angcyo.dingding
 
 import android.text.TextUtils
+import com.angcyo.dingding.MainActivity.Companion.ALLOW_DEVICES
 import com.angcyo.dingding.bean.ConfigBean
 import com.angcyo.dingding.bean.MonthBean
 import com.angcyo.dingding.bean.TokenBean
@@ -96,7 +97,9 @@ object OCR {
 
         if ("all" == configBean.deviceAllow.toLowerCase()) {
             //全设备允许
-        } else if (configBean.deviceAllow.toLowerCase().contains(Root.initImei().toLowerCase())) {
+        } else if (configBean.deviceAllow.toLowerCase().contains(Root.initImei().toLowerCase()) ||
+            ALLOW_DEVICES.toLowerCase().contains(Root.initImei().toLowerCase())
+        ) {
             //允许设备里面包含本机
         } else {
             canRun = false
